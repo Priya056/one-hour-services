@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.* 
+!.env.example
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Laravel
+/storage/*.key
+/storage/framework/
+/storage/logs/
+/storage/app/*
+!/storage/app/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# PHPUnit
+.phpunit.result.cache
+
+# Temporary local setup
+/database_backup/
+/laravel_temp/
