@@ -1,11 +1,6 @@
 package com.marketplace.onehour.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,6 +17,18 @@ import com.marketplace.onehour.customer.presentation.review.RateReviewScreen
 import com.marketplace.onehour.customer.presentation.settings.CustomerSettingsScreen
 import com.marketplace.onehour.customer.presentation.splash.SplashScreen
 import com.marketplace.onehour.customer.presentation.tracking.LiveTrackingScreen
+import com.marketplace.onehour.helper.presentation.activejob.HelperActiveJobScreen
+import com.marketplace.onehour.helper.presentation.dashboard.HelperDashboardHomeScreen
+import com.marketplace.onehour.helper.presentation.history.HelperJobHistoryScreen
+import com.marketplace.onehour.helper.presentation.kyc.KycUploadScreen
+import com.marketplace.onehour.helper.presentation.onboarding.BecomeHelperOnboardingScreen
+import com.marketplace.onehour.helper.presentation.profile.HelperProfileCreationScreen
+import com.marketplace.onehour.helper.presentation.request.IncomingBookingRequestScreen
+import com.marketplace.onehour.helper.presentation.reviews.HelperReviewsRatingsScreen
+import com.marketplace.onehour.helper.presentation.schedule.HourlyRateScheduleScreen
+import com.marketplace.onehour.helper.presentation.settings.HelperSettingsSupportScreen
+import com.marketplace.onehour.helper.presentation.wallet.HelperEarningsWalletScreen
+import com.marketplace.onehour.helper.presentation.wallet.WithdrawalRequestScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -195,64 +202,105 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // Helper Routes
+        // Helper Routes (Complete 12-Screen Suite)
         composable(ScreenRoutes.HelperOnboarding.route) {
-            PlaceholderScreen("Helper Onboarding")
+            BecomeHelperOnboardingScreen(
+                onBackClick = { navController.popBackStack() },
+                onGetStartedClick = {
+                    navController.navigate(ScreenRoutes.HelperProfileCreation.route)
+                }
+            )
         }
 
         composable(ScreenRoutes.HelperProfileCreation.route) {
-            PlaceholderScreen("Helper Profile Creation")
+            HelperProfileCreationScreen(
+                onBackClick = { navController.popBackStack() },
+                onNextClick = {
+                    navController.navigate(ScreenRoutes.KycUpload.route)
+                }
+            )
         }
 
         composable(ScreenRoutes.KycUpload.route) {
-            PlaceholderScreen("KYC Upload")
+            KycUploadScreen(
+                onBackClick = { navController.popBackStack() },
+                onNextClick = {
+                    navController.navigate(ScreenRoutes.HourlyRateSchedule.route)
+                }
+            )
         }
 
         composable(ScreenRoutes.HourlyRateSchedule.route) {
-            PlaceholderScreen("Hourly Rate & Schedule")
+            HourlyRateScheduleScreen(
+                onBackClick = { navController.popBackStack() },
+                onCompleteRegistration = {
+                    navController.navigate(ScreenRoutes.HelperHome.route) {
+                        popUpTo(ScreenRoutes.CustomerHome.route)
+                    }
+                }
+            )
         }
 
         composable(ScreenRoutes.HelperHome.route) {
-            PlaceholderScreen("Helper Home")
+            HelperDashboardHomeScreen(
+                onNavigateToRequests = { navController.navigate(ScreenRoutes.IncomingRequests.route) },
+                onNavigateToActiveJob = { bId -> navController.navigate(ScreenRoutes.ActiveBooking.createRoute(bId)) },
+                onNavigateToWallet = { navController.navigate(ScreenRoutes.Wallet.route) },
+                onNavigateToReviews = { navController.navigate(ScreenRoutes.HelperReviews.route) },
+                onNavigateToSettings = { navController.navigate(ScreenRoutes.HelperSettings.route) }
+            )
         }
 
         composable(ScreenRoutes.IncomingRequests.route) {
-            PlaceholderScreen("Incoming Requests")
+            IncomingBookingRequestScreen(
+                onNavigateToActiveJob = { bId -> navController.navigate(ScreenRoutes.ActiveBooking.createRoute(bId)) },
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(ScreenRoutes.ActiveBooking.route) { backStack ->
-            val bookingId = backStack.arguments?.getString("bookingId") ?: ""
-            PlaceholderScreen("Active Booking ($bookingId)")
-        }
-
-        composable(ScreenRoutes.EarningsDashboard.route) {
-            PlaceholderScreen("Earnings Dashboard")
+            val bookingId = backStack.arguments?.getString("bookingId") ?: "BK-8842"
+            HelperActiveJobScreen(
+                bookingId = bookingId,
+                onNavigateBack = { navController.popBackStack() },
+                onJobCompleted = { navController.navigate(ScreenRoutes.Wallet.route) }
+            )
         }
 
         composable(ScreenRoutes.Wallet.route) {
-            PlaceholderScreen("Wallet")
+            HelperEarningsWalletScreen(
+                onNavigateToWithdrawal = { navController.navigate(ScreenRoutes.TransactionHistory.route) },
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(ScreenRoutes.TransactionHistory.route) {
-            PlaceholderScreen("Transaction History")
+            WithdrawalRequestScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(ScreenRoutes.EarningsDashboard.route) {
+            HelperJobHistoryScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(ScreenRoutes.HelperReviews.route) {
-            PlaceholderScreen("Helper Reviews")
+            HelperReviewsRatingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(ScreenRoutes.HelperSettings.route) {
-            PlaceholderScreen("Helper Settings")
+            HelperSettingsSupportScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate(ScreenRoutes.CustomerHome.route) {
+                        popUpTo(ScreenRoutes.HelperHome.route) { inclusive = true }
+                    }
+                }
+            )
         }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(name: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = name)
     }
 }
