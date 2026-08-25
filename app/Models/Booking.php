@@ -166,7 +166,10 @@ class Booking extends Model
      */
     public function scopeForHelper($query, $helperId)
     {
-        return $query->where('helper_id', $helperId);
+        return $query->where('helper_id', $helperId)
+            ->whereHas('payment', function ($paymentQuery) {
+                $paymentQuery->where('status', 'success');
+            });
     }
 
     /**

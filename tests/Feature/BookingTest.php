@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\HelperService;
 use App\Models\HelperAvailability;
 use App\Models\Booking;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -456,14 +457,28 @@ class BookingTest extends TestCase
     public function test_helper_can_view_booking_history()
     {
         $customer = User::factory()->create(['role' => 'customer']);
-        $helper = User::factory()->create(['role' => 'helper']);
+        $helper = User::factory()->create(['role' => 'helper', 'is_active' => true]);
         $helperProfile = HelperProfile::factory()->create(['user_id' => $helper->id]);
         $category = Category::factory()->create();
-        Booking::factory()->count(3)->create([
+        
+        $bookings = Booking::factory()->count(3)->create([
             'customer_id' => $customer->id,
             'helper_id' => $helperProfile->id,
             'category_id' => $category->id,
         ]);
+
+        // Add successful payments to bookings so helper can see them
+        foreach ($bookings as $booking) {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'amount' => $booking->total_amount,
+                'platform_commission' => 150.00,
+                'helper_payout_amount' => $booking->total_amount - 150.00,
+                'payment_gateway' => 'razorpay',
+                'gateway_transaction_id' => 'pay_' . $booking->id,
+                'status' => 'success',
+            ]);
+        }
 
         $token = $helper->createToken('auth-token')->plainTextToken;
 
@@ -592,5 +607,61 @@ class BookingTest extends TestCase
             ]);
 
         $response->assertStatus(201); // Should succeed - cancelled bookings don't block
+    }
+
+    /**
+     * Invalid status transition through updateStatus is rejected.
+     */
+    public function test_invalid_status_transition_through_updateStatus_is_rejected()
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $helper = User::factory()->create(['role' => 'helper', 'is_active' => true]);
+        $helperProfile = HelperProfile::factory()->create(['user_id' => $helper->id]);
+        $category = Category::factory()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'helper_id' => $helperProfile->id,
+            'category_id' => $category->id,
+            'status' => 'completed',
+        ]);
+
+        $token = $helper->createToken('auth-token')->plainTextToken;
+
+        // Try to transition from completed to accepted (invalid)
+        $response = $this->withToken($token)
+            ->patchJson("/api/bookings/{$booking->id}/status", [
+                'status' => 'accepted',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('message', 'Cannot transition from completed to accepted.');
+    }
+
+    /**
+     * Valid status transition through updateStatus works.
+     */
+    public function test_valid_status_transition_through_updateStatus_works()
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $helper = User::factory()->create(['role' => 'helper', 'is_active' => true]);
+        $helperProfile = HelperProfile::factory()->create(['user_id' => $helper->id]);
+        $category = Category::factory()->create();
+        $booking = Booking::factory()->create([
+            'customer_id' => $customer->id,
+            'helper_id' => $helperProfile->id,
+            'category_id' => $category->id,
+            'status' => 'requested',
+        ]);
+
+        $token = $helper->createToken('auth-token')->plainTextToken;
+
+        // Valid transition: requested -> accepted
+        $response = $this->withToken($token)
+            ->patchJson("/api/bookings/{$booking->id}/status", [
+                'status' => 'accepted',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.status', 'accepted');
     }
 }

@@ -65,10 +65,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // Review Routes
     Route::post('/reviews', App\Http\Controllers\ReviewController::class . '@store');
     Route::get('/reviews/{id}', App\Http\Controllers\ReviewController::class . '@show');
+
+    // Payment Routes
+    Route::post('/payments/order', App\Http\Controllers\PaymentController::class . '@createOrder');
+    Route::post('/payments', App\Http\Controllers\PaymentController::class . '@store');
+    Route::get('/payments/{id}', App\Http\Controllers\PaymentController::class . '@show');
+
+    // Wallet Routes
+    Route::get('/wallet', App\Http\Controllers\WalletController::class . '@show');
+    Route::post('/wallet/withdraw', App\Http\Controllers\WalletController::class . '@withdraw');
 });
 
 // Public Routes (no authentication required)
 Route::get('/helpers/{helperId}/reviews', App\Http\Controllers\ReviewController::class . '@helperReviews');
+
+// Webhook Routes (no authentication, signature verified in controller)
+Route::post('/webhooks/razorpay', App\Http\Controllers\WebhookController::class . '@razorpay');
 
 // Admin Routes (require admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -80,6 +92,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Admin KYC Review
     Route::patch('/admin/kyc/{id}/approve', App\Http\Controllers\KYCController::class . '@approve');
     Route::patch('/admin/kyc/{id}/reject', App\Http\Controllers\KYCController::class . '@reject');
+
+    // Admin Withdrawal Management
+    Route::get('/admin/withdrawals', App\Http\Controllers\AdminWithdrawalController::class . '@index');
+    Route::patch('/admin/withdrawals/{id}/process', App\Http\Controllers\AdminWithdrawalController::class . '@process');
+    Route::patch('/admin/withdrawals/{id}/reject', App\Http\Controllers\AdminWithdrawalController::class . '@reject');
+
+    // Admin Dispute Management
+    Route::get('/admin/disputes', App\Http\Controllers\DisputeController::class . '@index');
+    Route::get('/admin/disputes/{id}', App\Http\Controllers\DisputeController::class . '@show');
+    Route::patch('/admin/disputes/{id}/resolve', App\Http\Controllers\DisputeController::class . '@resolve');
 });
 
 // Public Routes (no authentication required)
