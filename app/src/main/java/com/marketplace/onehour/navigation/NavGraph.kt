@@ -19,6 +19,7 @@ import com.marketplace.onehour.customer.presentation.home.HomeScreen
 import com.marketplace.onehour.customer.presentation.payment.PaymentScreen
 import com.marketplace.onehour.customer.presentation.profile.HelperProfileScreen
 import com.marketplace.onehour.customer.presentation.review.RateReviewScreen
+import com.marketplace.onehour.customer.presentation.settings.CustomerSettingsScreen
 import com.marketplace.onehour.customer.presentation.splash.SplashScreen
 import com.marketplace.onehour.customer.presentation.tracking.LiveTrackingScreen
 
@@ -177,7 +178,21 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(ScreenRoutes.CustomerSettings.route) {
-            PlaceholderScreen("Customer Settings")
+            CustomerSettingsScreen(
+                onSwitchToHelperMode = {
+                    navController.navigate(ScreenRoutes.HelperOnboarding.route)
+                },
+                onLogout = {
+                    navController.navigate(ScreenRoutes.CustomerAuth.route) {
+                        popUpTo(ScreenRoutes.CustomerHome.route) { inclusive = true }
+                    }
+                },
+                onNavigateBottom = { route ->
+                    if (route != ScreenRoutes.CustomerSettings.route) {
+                        navController.navigate(route)
+                    }
+                }
+            )
         }
 
         // Helper Routes
