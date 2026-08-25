@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateAvailabilityRequest;
 use App\Http\Requests\UpdateAvailabilityRequest;
 use App\Http\Resources\HelperAvailabilityResource;
+use App\Http\Resources\NearbyHelperResource;
 use App\Models\HelperAvailability;
 use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
@@ -112,6 +113,61 @@ class AvailabilityController extends Controller
         return response()->json([
             'message' => 'Availability slot deleted successfully.',
         ]);
+    }
+
+    /**
+     * Update the authenticated helper's live location.
+     * The Helper app is expected to call this periodically while "available now" is on.
+     */
+    public function updateLocation(Request $request)
+    {
+        $user = $request->user();
+        $helperProfile = $user->helperProfile;
+
+        if (!$helperProfile) {
+            return response()->json([
+                'message' => 'Helper profile not found.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $helperProfile->update([
+            'current_lat' => $validated['lat'],
+            'current_lng' => $validated['lng'],
+            'location_updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'current_lat' => $helperProfile->current_lat,
+            'current_lng' => $helperProfile->current_lng,
+            'location_updated_at' => $helperProfile->location_updated_at,
+        ]);
+    }
+
+    /**
+     * Search for available helpers near a given point ("who is available near me right now").
+     */
+    public function nearby(Request $request)
+    {
+        $validated = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'max_distance_km' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $helpers = $this->availabilityService->getNearbyAvailableHelpers(
+            (float) $validated['lat'],
+            (float) $validated['lng'],
+            (float) ($validated['max_distance_km'] ?? 25.0),
+            $validated['category_id'] ?? null,
+        );
+
+        return NearbyHelperResource::collection($helpers);
     }
 
     /**

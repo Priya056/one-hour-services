@@ -12,6 +12,10 @@ class HelperAvailability extends Model
 {
     use HasFactory;
 
+    // Eloquent's class-name convention would guess "helper_availabilities"; the
+    // migration created the singular "helper_availability".
+    protected $table = 'helper_availability';
+
     protected $fillable = [
         'helper_id',
         'day_of_week',

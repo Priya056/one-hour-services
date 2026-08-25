@@ -16,6 +16,13 @@ class ServicesAvailabilityTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     /**
      * Test category listing.
      */
@@ -184,5 +191,81 @@ class ServicesAvailabilityTest extends TestCase
         $mondayEarly = Carbon::create(2024, 1, 1, 8, 0, 0); // Monday
         $isAvailable = $availabilityService->isAvailableAt($helperProfile, $mondayEarly);
         $this->assertFalse($isAvailable);
+    }
+
+    /**
+     * Test nearby search returns in-range, available, scheduled helpers and
+     * excludes out-of-range ones.
+     */
+    public function test_nearby_search_returns_available_helpers_within_radius()
+    {
+        Carbon::setTestNow(Carbon::create(2024, 1, 1, 10, 0, 0)); // Monday 10:00
+
+        $category = Category::factory()->create();
+
+        $near = User::factory()->create(['role' => 'helper', 'is_active' => true]);
+        $nearProfile = HelperProfile::factory()->create([
+            'user_id' => $near->id,
+            'is_available_now' => true,
+            'kyc_status' => 'approved',
+            'current_lat' => 12.9716,
+            'current_lng' => 77.5946,
+        ]);
+        HelperService::factory()->create([
+            'helper_id' => $nearProfile->id,
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+        HelperAvailability::factory()->create([
+            'helper_id' => $nearProfile->id,
+            'day_of_week' => 1,
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+        ]);
+
+        // ~47km north — outside the 25km search radius
+        $far = User::factory()->create(['role' => 'helper', 'is_active' => true]);
+        $farProfile = HelperProfile::factory()->create([
+            'user_id' => $far->id,
+            'is_available_now' => true,
+            'kyc_status' => 'approved',
+            'current_lat' => 13.4000,
+            'current_lng' => 77.5946,
+        ]);
+        HelperService::factory()->create([
+            'helper_id' => $farProfile->id,
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+        HelperAvailability::factory()->create([
+            'helper_id' => $farProfile->id,
+            'day_of_week' => 1,
+            'start_time' => '09:00:00',
+            'end_time' => '17:00:00',
+        ]);
+
+        // In range but toggled off — should be excluded
+        $offline = User::factory()->create(['role' => 'helper', 'is_active' => true]);
+        HelperProfile::factory()->create([
+            'user_id' => $offline->id,
+            'is_available_now' => false,
+            'kyc_status' => 'approved',
+            'current_lat' => 12.9716,
+            'current_lng' => 77.5946,
+        ]);
+
+        $response = $this->getJson('/api/helpers/nearby?' . http_build_query([
+            'lat' => 12.9716,
+            'lng' => 77.5946,
+            'max_distance_km' => 25,
+        ]));
+
+        $response->assertStatus(200);
+
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($nearProfile->id));
+        $this->assertFalse($ids->contains($farProfile->id));
+        $this->assertCount(1, $ids);
     }
 }
