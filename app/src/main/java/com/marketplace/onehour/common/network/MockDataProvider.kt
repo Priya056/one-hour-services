@@ -1,12 +1,23 @@
 package com.marketplace.onehour.common.network
 
 object MockDataProvider {
+    val sampleCategories = listOf(
+        CategoryDto("cat_1", "Personal Assistance", "Calendar, organization, tasks", "person"),
+        CategoryDto("cat_2", "Electrical Specialist", "Wiring, fixtures & appliance repairs", "bolt"),
+        CategoryDto("cat_3", "Tutoring", "Math, Science & Languages", "school"),
+        CategoryDto("cat_4", "Photography", "Portraits, events & product shots", "camera_alt"),
+        CategoryDto("cat_5", "Home Repairs", "Mounting, plumbing & carpentry", "build"),
+        CategoryDto("cat_6", "errands & delivery", "Groceries, pickups & document delivery", "local_shipping"),
+        CategoryDto("cat_7", "design/creative", "Graphics, UI logos & media editing", "palette"),
+        CategoryDto("cat_8", "business/professional", "Tech support, legal & admin help", "business_center")
+    )
+
     val sampleHelpers = listOf(
         HelperDto(
             id = "h1",
             name = "Alex Rivera",
             photoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
-            mainCategory = "Electrical",
+            mainCategory = "Electrical Specialist",
             rating = 4.9,
             reviewCount = 124,
             hourlyRate = 35.0,
@@ -19,13 +30,13 @@ object MockDataProvider {
             id = "h2",
             name = "Sarah Jenkins",
             photoUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-            mainCategory = "Personal Assistance",
+            mainCategory = "errands & delivery",
             rating = 4.8,
             reviewCount = 89,
             hourlyRate = 28.0,
             distanceKm = 1.2,
-            bio = "Organized, prompt personal assistant for errands, administrative help, scheduling & organization.",
-            skills = listOf("Errands", "Schedule Admin", "Event Prep", "Data Entry"),
+            bio = "Organized, prompt assistant for grocery runs, document delivery & local errands.",
+            skills = listOf("Errands", "Document Delivery", "Grocery Pickup", "Admin Help"),
             isAvailable = true
         ),
         HelperDto(

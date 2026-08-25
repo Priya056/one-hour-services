@@ -175,10 +175,16 @@ fun LoginRegisterScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         TextButton(
-                            onClick = { viewModel.sendOtp() },
+                            onClick = { viewModel.resendOtp() },
+                            enabled = state.resendCountdownSeconds == 0,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Didn't receive code? Resend OTP")
+                            Text(
+                                if (state.resendCountdownSeconds > 0)
+                                    "Resend OTP in ${state.resendCountdownSeconds}s"
+                                else
+                                    "Didn't receive code? Resend OTP"
+                            )
                         }
                     }
                 }

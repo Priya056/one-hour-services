@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +23,7 @@ import com.marketplace.onehour.common.theme.PrimaryBlue
 
 @Composable
 fun SplashScreen(
-    onSplashFinished: () -> Unit,
+    onSplashFinished: (isUserLoggedIn: Boolean) -> Unit,
     viewModel: SplashViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -42,7 +41,7 @@ fun SplashScreen(
 
     LaunchedEffect(state.isLoading) {
         if (!state.isLoading) {
-            onSplashFinished()
+            onSplashFinished(state.isUserLoggedIn)
         }
     }
 

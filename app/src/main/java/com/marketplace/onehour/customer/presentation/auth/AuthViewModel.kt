@@ -2,6 +2,7 @@ package com.marketplace.onehour.customer.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,8 @@ import kotlinx.coroutines.launch
 class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthState())
     val uiState: StateFlow<AuthState> = _uiState.asStateFlow()
+
+    private var cooldownJob: Job? = null
 
     fun onPhoneNumberChanged(number: String) {
         if (number.length <= 10 && number.all { it.isDigit() }) {
@@ -35,8 +38,27 @@ class AuthViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 isOtpSent = true,
-                otpCode = "123456" // Pre-fill mock OTP for quick testing
+                otpCode = "123456"
             )
+            startResendCooldownTimer()
+        }
+    }
+
+    fun resendOtp() {
+        if (_uiState.value.resendCountdownSeconds > 0) return
+        sendOtp()
+    }
+
+    private fun startResendCooldownTimer() {
+        cooldownJob?.cancel()
+        cooldownJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(resendCountdownSeconds = 30)
+            while (_uiState.value.resendCountdownSeconds > 0) {
+                delay(1000)
+                _uiState.value = _uiState.value.copy(
+                    resendCountdownSeconds = _uiState.value.resendCountdownSeconds - 1
+                )
+            }
         }
     }
 
@@ -57,6 +79,7 @@ class AuthViewModel : ViewModel() {
     }
 
     fun resetToPhoneEntry() {
-        _uiState.value = _uiState.value.copy(isOtpSent = false, otpCode = "")
+        cooldownJob?.cancel()
+        _uiState.value = _uiState.value.copy(isOtpSent = false, otpCode = "", resendCountdownSeconds = 0)
     }
 }
