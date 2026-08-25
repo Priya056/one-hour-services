@@ -1,0 +1,22 @@
+*.iml
+.gradle
+.idea
+/build
+/app/build
+/app/src/main/res/drawable/ic_launcher_background.xml
+/app/src/main/res/drawable/ic_launcher_foreground.xml
+/app/src/main/res/mipmap-anydpi-v26
+local.properties
+.DS_Store
+captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+
+# Admin Dashboard
+admin-dashboard/node_modules
+admin-dashboard/dist
+admin-dashboard/snap.js
+admin-dashboard/dashboard_screen1.png
+admin-dashboard/*.log
