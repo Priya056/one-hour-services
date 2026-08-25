@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun HelperSettingsSupportScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToJobHistory: () -> Unit,
     onLogout: () -> Unit
 ) {
     var radiusKm by remember { mutableStateOf(10f) }
@@ -89,6 +90,25 @@ fun HelperSettingsSupportScreen(
                         ) {
                             Text("Loud Ringtone Alerts for Bookings")
                             Switch(checked = soundAlerts, onCheckedChange = { soundAlerts = it })
+                        }
+                    }
+                }
+            }
+
+            // Job History
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedButton(
+                            onClick = onNavigateToJobHistory,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.History, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("View Job History")
                         }
                     }
                 }

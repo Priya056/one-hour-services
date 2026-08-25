@@ -8,6 +8,7 @@ import com.marketplace.onehour.common.network.CreateAvailabilityRequestBody
 import com.marketplace.onehour.common.network.HelperServiceRequestBody
 import com.marketplace.onehour.common.network.KycSubmitRequestBody
 import com.marketplace.onehour.common.network.ToggleAvailableRequestBody
+import com.marketplace.onehour.common.network.TokenStore
 import com.marketplace.onehour.helper.presentation.onboarding.HelperOnboardingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -78,6 +79,10 @@ class ScheduleViewModel : ViewModel() {
                         serviceRadiusKm = 10.0
                     )
                 )
+                // becomeHelper() flips the user's role server-side; keep the
+                // locally cached role in sync so later role-gated checks
+                // (e.g. re-opening "Become a Helper") see the real state.
+                TokenStore.updateRole("helper")
 
                 ApiClient.api.submitKyc(
                     KycSubmitRequestBody(
@@ -98,8 +103,9 @@ class ScheduleViewModel : ViewModel() {
                     ApiClient.api.createAvailability(
                         CreateAvailabilityRequestBody(
                             dayOfWeek = dayOfWeek,
-                            startTime = "%02d:00:00".format(startHour),
-                            endTime = "%02d:00:00".format(endHour)
+                            // Backend validates with date_format:H:i (no seconds).
+                            startTime = "%02d:00".format(startHour),
+                            endTime = "%02d:00".format(endHour)
                         )
                     )
                 }

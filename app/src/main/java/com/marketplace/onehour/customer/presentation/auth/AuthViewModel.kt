@@ -108,7 +108,13 @@ class AuthViewModel : ViewModel() {
                 }
             }
 
-            TokenStore.saveSession(authResponse.token, authResponse.user.role)
+            TokenStore.saveSession(
+                token = authResponse.token,
+                role = authResponse.user.role,
+                name = authResponse.user.name,
+                phone = authResponse.user.phone,
+                email = authResponse.user.email
+            )
             _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
             onSuccess()
         }

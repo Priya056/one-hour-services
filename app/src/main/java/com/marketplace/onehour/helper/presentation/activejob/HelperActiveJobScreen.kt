@@ -24,6 +24,10 @@ fun HelperActiveJobScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    LaunchedEffect(bookingId) {
+        bookingId.toIntOrNull()?.let { viewModel.loadJob(it) }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -98,10 +102,16 @@ fun HelperActiveJobScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    if (state.errorMessage != null) {
+                        Text(text = state.errorMessage!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     when (state.status) {
                         JobLifecycleStatus.ACCEPTED -> {
                             Button(
-                                onClick = { viewModel.updateStatus(JobLifecycleStatus.ON_THE_WAY) },
+                                onClick = { viewModel.advanceTo(JobLifecycleStatus.ON_THE_WAY) },
+                                enabled = !state.isLoading,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.DirectionsRun, contentDescription = null)
@@ -111,7 +121,8 @@ fun HelperActiveJobScreen(
                         }
                         JobLifecycleStatus.ON_THE_WAY -> {
                             Button(
-                                onClick = { viewModel.updateStatus(JobLifecycleStatus.ARRIVED) },
+                                onClick = { viewModel.advanceTo(JobLifecycleStatus.ARRIVED) },
+                                enabled = !state.isLoading,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.PinDrop, contentDescription = null)
@@ -120,26 +131,12 @@ fun HelperActiveJobScreen(
                             }
                         }
                         JobLifecycleStatus.ARRIVED -> {
-                            Column {
-                                Text(text = "Ask customer for 4-Digit Start Code (OTP: 1234)", fontSize = 13.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                OutlinedTextField(
-                                    value = state.otpCodeInput,
-                                    onValueChange = { viewModel.setOtpInput(it) },
-                                    label = { Text("Enter 4-Digit Customer OTP") },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                if (state.otpError != null) {
-                                    Text(text = state.otpError!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Button(
-                                    onClick = { viewModel.verifyOtpAndStart("1234") },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Verify & Begin 1-Hour Service")
-                                }
+                            Button(
+                                onClick = { viewModel.advanceTo(JobLifecycleStatus.IN_PROGRESS) },
+                                enabled = !state.isLoading,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Begin 1-Hour Service")
                             }
                         }
                         JobLifecycleStatus.IN_PROGRESS -> {
@@ -149,10 +146,8 @@ fun HelperActiveJobScreen(
                                 Text(text = "1-Hour Service is currently in progress...", fontWeight = FontWeight.SemiBold)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
-                                    onClick = {
-                                        viewModel.updateStatus(JobLifecycleStatus.COMPLETED)
-                                        onJobCompleted()
-                                    },
+                                    onClick = { viewModel.advanceTo(JobLifecycleStatus.COMPLETED) },
+                                    enabled = !state.isLoading,
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                                 ) {
@@ -163,6 +158,7 @@ fun HelperActiveJobScreen(
                             }
                         }
                         JobLifecycleStatus.COMPLETED -> {
+                            LaunchedEffect(Unit) { onJobCompleted() }
                             Text(text = "🎉 Job Completed Successfully!", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
                         }
                     }

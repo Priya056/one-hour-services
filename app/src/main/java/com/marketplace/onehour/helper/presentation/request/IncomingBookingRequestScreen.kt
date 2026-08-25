@@ -98,7 +98,7 @@ fun IncomingBookingRequestScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "${item.distanceKm} • ${item.address}", fontSize = 13.sp, color = Color.Gray)
+                                Text(text = item.address, fontSize = 13.sp, color = Color.Gray)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
 
@@ -124,8 +124,9 @@ fun IncomingBookingRequestScreen(
 
                                 Button(
                                     onClick = {
-                                        viewModel.acceptRequest(item.bookingId)
-                                        onNavigateToActiveJob(item.bookingId)
+                                        viewModel.acceptRequest(item.bookingId) {
+                                            onNavigateToActiveJob(item.bookingId)
+                                        }
                                     },
                                     modifier = Modifier.weight(1f)
                                 ) {

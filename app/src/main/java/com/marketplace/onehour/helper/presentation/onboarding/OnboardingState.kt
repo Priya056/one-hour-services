@@ -16,5 +16,6 @@ data class OnboardingState(
         HelperBenefit("b3", "Instant Bank Payouts", "Withdraw your earnings directly to UPI or bank account anytime.", "AccountBalanceWallet"),
         HelperBenefit("b4", "Verified Customers", "Work safely with ID-verified local clients near your location.", "VerifiedUser")
     ),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val alreadyHelper: Boolean = false
 )

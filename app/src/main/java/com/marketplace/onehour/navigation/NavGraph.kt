@@ -209,6 +209,11 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() },
                 onGetStartedClick = {
                     navController.navigate(ScreenRoutes.HelperProfileCreation.route)
+                },
+                onAlreadyHelper = {
+                    navController.navigate(ScreenRoutes.HelperHome.route) {
+                        popUpTo(ScreenRoutes.CustomerHome.route)
+                    }
                 }
             )
         }
@@ -296,6 +301,7 @@ fun NavGraph(navController: NavHostController) {
         composable(ScreenRoutes.HelperSettings.route) {
             HelperSettingsSupportScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToJobHistory = { navController.navigate(ScreenRoutes.EarningsDashboard.route) },
                 onLogout = {
                     navController.navigate(ScreenRoutes.CustomerHome.route) {
                         popUpTo(ScreenRoutes.HelperHome.route) { inclusive = true }

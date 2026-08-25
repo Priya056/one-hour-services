@@ -25,9 +25,18 @@ import com.marketplace.onehour.common.components.PrimaryButton
 fun BecomeHelperOnboardingScreen(
     onBackClick: () -> Unit,
     onGetStartedClick: () -> Unit,
+    onAlreadyHelper: () -> Unit,
     viewModel: OnboardingViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkExistingHelperStatus()
+    }
+
+    LaunchedEffect(state.alreadyHelper) {
+        if (state.alreadyHelper) onAlreadyHelper()
+    }
 
     Scaffold(
         topBar = {

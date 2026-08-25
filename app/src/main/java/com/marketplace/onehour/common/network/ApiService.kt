@@ -124,7 +124,9 @@ data class ReviewDto(
     val customerId: Int,
     val helperId: Int,
     val rating: Int,
-    val comment: String?
+    val comment: String?,
+    val createdAt: String? = null,
+    val customer: UserDto? = null
 )
 
 // ---- Request bodies ----
