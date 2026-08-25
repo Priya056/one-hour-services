@@ -21,7 +21,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'check.helper.availability' => \App\Http\Middleware\CheckHelperAvailability::class,
         ]);
+
+        // Render (and most PaaS hosts) terminate TLS at a reverse proxy and
+        // forward plain HTTP to the container, signalling the original
+        // scheme via X-Forwarded-Proto. Without trusting that header,
+        // url()/redirect() see an insecure request and generate http://
+        // links even for a request that arrived over https — which Android
+        // then correctly refuses to follow (cleartext traffic disabled).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Every api/* route is a JSON API — always render exceptions
+        // (validation failures included) as JSON, never as an HTML
+        // redirect/error page, regardless of the request's Accept header.
+        $exceptions->shouldRenderJsonWhen(function ($request, $throwable) {
+            return $request->is('api/*') || $request->expectsJson();
+        });
     })->create();
