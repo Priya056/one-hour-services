@@ -1,7 +1,7 @@
 # Staging image for Render. Uses SQLite (no separate paid DB service needed);
 # the file resets on every redeploy/restart — fine for API-contract testing,
 # not a permanent store. See README for the tradeoff.
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 RUN apt-get update && apt-get install -y \
         git unzip libsqlite3-dev libzip-dev \
