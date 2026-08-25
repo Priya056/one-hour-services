@@ -54,33 +54,46 @@ fun BookingScreen(
                 shadowElevation = 8.dp,
                 color = MaterialTheme.colorScheme.surface
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    val bookingError = state.bookingError
+                    if (bookingError != null) {
                         Text(
-                            text = "TOTAL AMOUNT",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "$${"%.2f".format(state.totalAmount)}",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            text = bookingError,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "TOTAL AMOUNT",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "$${"%.2f".format(state.totalAmount)}",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
-                    PrimaryButton(
-                        text = "Proceed to Payment",
-                        onClick = { onProceedToPayment("b_mock_101") },
-                        modifier = Modifier.width(200.dp)
-                    )
+                        PrimaryButton(
+                            text = if (state.isLoading) "Booking..." else "Proceed to Payment",
+                            onClick = {
+                                if (!state.isLoading) {
+                                    viewModel.confirmBooking(onSuccess = onProceedToPayment)
+                                }
+                            },
+                            modifier = Modifier.width(200.dp)
+                        )
+                    }
                 }
             }
         }

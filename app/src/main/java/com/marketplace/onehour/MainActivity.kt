@@ -8,12 +8,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import com.marketplace.onehour.common.network.TokenStore
 import com.marketplace.onehour.common.theme.OneHourMarketplaceTheme
 import com.marketplace.onehour.navigation.NavGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TokenStore.init(applicationContext)
         setContent {
             OneHourMarketplaceTheme {
                 Surface(

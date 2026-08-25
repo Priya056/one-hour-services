@@ -34,7 +34,7 @@ import com.marketplace.onehour.helper.presentation.wallet.WithdrawalRequestScree
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = ScreenRoutes.HelperHome.route
+        startDestination = ScreenRoutes.CustomerSplash.route
     ) {
         // Customer Routes
         composable(ScreenRoutes.CustomerSplash.route) {

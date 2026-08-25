@@ -2,12 +2,26 @@ package com.marketplace.onehour.customer.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marketplace.onehour.common.network.ApiClient
+import com.marketplace.onehour.common.network.LoginRequestBody
+import com.marketplace.onehour.common.network.RegisterRequestBody
+import com.marketplace.onehour.common.network.TokenStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+/**
+ * The backend has no real OTP delivery/verification endpoint yet — auth is
+ * phone+password. The OTP step here stays mocked (matches the original
+ * spec: "OTP verification flow, mock OTP for now"), but on success we make a
+ * REAL account/login call so every screen after this has a real Sanctum
+ * token. The password is a deterministic placeholder derived from the phone
+ * number (never shown to the user) until real OTP-based auth replaces this.
+ */
+private fun placeholderPassword(phone: String) = "onehour-otp-$phone"
 
 class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthState())
@@ -69,11 +83,33 @@ class AuthViewModel : ViewModel() {
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            delay(1200)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isAuthenticated = true
-            )
+            val phone = _uiState.value.phoneNumber
+            val password = placeholderPassword(phone)
+
+            val authResponse = try {
+                ApiClient.api.login(LoginRequestBody(phone = phone, password = password))
+            } catch (loginError: Exception) {
+                try {
+                    ApiClient.api.register(
+                        RegisterRequestBody(
+                            name = "Customer $phone",
+                            phone = phone,
+                            email = null,
+                            password = password,
+                            role = "customer"
+                        )
+                    )
+                } catch (registerError: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Couldn't sign in: ${registerError.message}"
+                    )
+                    return@launch
+                }
+            }
+
+            TokenStore.saveSession(authResponse.token, authResponse.user.role)
+            _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
             onSuccess()
         }
     }

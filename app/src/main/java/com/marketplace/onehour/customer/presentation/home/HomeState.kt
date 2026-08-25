@@ -17,5 +17,6 @@ data class HomeState(
     val categories: List<CategoryItem> = emptyList(),
     val nearbyHelpers: List<HelperDto> = emptyList(),
     val isLoading: Boolean = false,
-    val unreadNotificationsCount: Int = 2
+    val unreadNotificationsCount: Int = 2,
+    val errorMessage: String? = null
 )

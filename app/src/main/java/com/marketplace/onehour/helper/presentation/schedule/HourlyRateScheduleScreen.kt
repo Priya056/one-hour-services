@@ -53,9 +53,22 @@ fun HourlyRateScheduleScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    val registrationError = state.registrationError
+                    if (registrationError != null) {
+                        Text(
+                            text = registrationError,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
                     PrimaryButton(
-                        text = "Complete Registration & Go Live 🎉",
-                        onClick = onCompleteRegistration
+                        text = if (state.isLoading) "Submitting..." else "Complete Registration & Go Live 🎉",
+                        onClick = {
+                            if (!state.isLoading) {
+                                viewModel.completeRegistration(onSuccess = onCompleteRegistration)
+                            }
+                        }
                     )
                 }
             }

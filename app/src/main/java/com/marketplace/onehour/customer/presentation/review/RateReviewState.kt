@@ -10,5 +10,6 @@ data class RateReviewState(
     val commentText: String = "",
     val selectedTipAmount: Double = 5.0,
     val isSubmitting: Boolean = false,
-    val isSubmitted: Boolean = false
+    val isSubmitted: Boolean = false,
+    val submitError: String? = null
 )

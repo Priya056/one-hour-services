@@ -2,7 +2,7 @@ package com.marketplace.onehour.customer.presentation.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marketplace.onehour.common.network.MockDataProvider
+import com.marketplace.onehour.common.network.HelperRepository
 import com.marketplace.onehour.common.placeholders.FirebaseChatPlaceholder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +16,7 @@ class ChatViewModel : ViewModel() {
 
     fun loadChatDetails(bookingId: String, helperId: String) {
         viewModelScope.launch {
-            val helper = MockDataProvider.sampleHelpers.find { it.id == helperId }
-                ?: MockDataProvider.sampleHelpers.first()
+            val helper = HelperRepository.findById(helperId) ?: HelperRepository.all().firstOrNull()
 
             val initialMessages = listOf(
                 FirebaseChatPlaceholder.ChatMessage("m1", "h1", "c1", "Hi! I have accepted your 1-hour booking for electrical repair.", System.currentTimeMillis() - 600000),
