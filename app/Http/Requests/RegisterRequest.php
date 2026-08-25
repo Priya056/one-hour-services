@@ -25,7 +25,9 @@ class RegisterRequest extends FormRequest
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', Password::defaults()],
-            'role' => ['required', 'in:customer,helper,admin'],
+            // 'admin' is deliberately excluded: public registration must never be able to
+            // mint an admin account. Admins are created out-of-band (seeder/artisan command).
+            'role' => ['required', 'in:customer,helper'],
         ];
     }
 }

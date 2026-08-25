@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BecomeHelperRequest;
 use App\Http\Requests\UpdateHelperProfileRequest;
 use App\Http\Resources\HelperProfileResource;
 use App\Models\HelperProfile;
@@ -9,6 +10,28 @@ use Illuminate\Http\Request;
 
 class HelperController extends Controller
 {
+    /**
+     * Become a helper: create the authenticated user's helper profile and
+     * upgrade their role. This is the "Become a Helper" onboarding entry point.
+     */
+    public function store(BecomeHelperRequest $request)
+    {
+        $user = $request->user();
+
+        $user->update(['role' => 'helper']);
+
+        $profile = HelperProfile::create([
+            'user_id' => $user->id,
+            'bio' => $request->bio,
+            'experience_years' => $request->experience_years ?? 0,
+            'service_radius_km' => $request->service_radius_km ?? 10.00,
+            'is_available_now' => false,
+            'kyc_status' => 'pending',
+        ]);
+
+        return new HelperProfileResource($profile);
+    }
+
     /**
      * Get authenticated helper's profile.
      */

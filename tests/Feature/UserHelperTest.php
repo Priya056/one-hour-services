@@ -45,6 +45,48 @@ class UserHelperTest extends TestCase
     }
 
     /**
+     * Test a customer can become a helper and gets a helper profile + role upgrade.
+     */
+    public function test_customer_can_become_a_helper()
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->postJson('/api/helper/profile', [
+                'bio' => 'I fix things.',
+                'experience_years' => 3,
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.bio', 'I fix things.')
+            ->assertJsonPath('data.kyc_status', 'pending');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'role' => 'helper',
+        ]);
+        $this->assertDatabaseHas('helper_profiles', [
+            'user_id' => $user->id,
+        ]);
+    }
+
+    /**
+     * Test becoming a helper twice is rejected instead of creating a duplicate profile.
+     */
+    public function test_cannot_become_a_helper_twice()
+    {
+        $user = User::factory()->create(['role' => 'helper']);
+        HelperProfile::factory()->create(['user_id' => $user->id]);
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->postJson('/api/helper/profile', ['bio' => 'Again']);
+
+        $response->assertStatus(403);
+    }
+
+    /**
      * Test helper can view their helper profile.
      */
     public function test_helper_can_view_their_helper_profile()

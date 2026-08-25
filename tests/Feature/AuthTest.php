@@ -38,6 +38,27 @@ class AuthTest extends TestCase
     }
 
     /**
+     * Test registration cannot self-assign the admin role.
+     */
+    public function test_registration_rejects_admin_role()
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'phone' => '+1234567890',
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'role' => 'admin',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['role']);
+
+        $this->assertDatabaseMissing('users', [
+            'phone' => '+1234567890',
+        ]);
+    }
+
+    /**
      * Test registration with duplicate phone.
      */
     public function test_registration_fails_with_duplicate_phone()

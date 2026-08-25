@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', App\Http\Controllers\UserController::class . '@update');
 
     // Helper Profile Routes
+    Route::post('/helper/profile', App\Http\Controllers\HelperController::class . '@store');
     Route::get('/helper/profile', App\Http\Controllers\HelperController::class . '@show');
     Route::put('/helper/profile', App\Http\Controllers\HelperController::class . '@update');
     Route::patch('/helper/status', App\Http\Controllers\HelperController::class . '@updateStatus');
@@ -40,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/helper/availability/{id}', App\Http\Controllers\AvailabilityController::class . '@update');
     Route::delete('/helper/availability/{id}', App\Http\Controllers\AvailabilityController::class . '@destroy');
     Route::patch('/helper/available-now', App\Http\Controllers\AvailabilityController::class . '@toggleAvailableNow');
+    Route::patch('/helper/location', App\Http\Controllers\AvailabilityController::class . '@updateLocation');
 
     // KYC Routes
     Route::post('/kyc', App\Http\Controllers\KYCController::class . '@submit');
@@ -68,3 +70,4 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 // Public Routes (no authentication required)
 Route::get('/categories', App\Http\Controllers\CategoryController::class . '@index');
 Route::get('/categories/{id}', App\Http\Controllers\CategoryController::class . '@show');
+Route::get('/helpers/nearby', App\Http\Controllers\AvailabilityController::class . '@nearby');
