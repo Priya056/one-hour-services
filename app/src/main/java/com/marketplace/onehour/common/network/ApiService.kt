@@ -18,6 +18,14 @@ data class HelperDto(
     val isAvailable: Boolean
 )
 
+data class CategoryDto(
+    val id: String,
+    val name: String,
+    val description: String,
+    val iconName: String
+)
+
+
 data class BookingDto(
     val id: String,
     val helperId: String,
