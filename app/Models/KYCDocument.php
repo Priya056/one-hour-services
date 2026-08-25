@@ -12,6 +12,10 @@ class KYCDocument extends Model
 {
     use HasFactory;
 
+    // Eloquent's class-name convention would guess "k_y_c_documents"; the
+    // migration created "kyc_documents".
+    protected $table = 'kyc_documents';
+
     protected $fillable = [
         'helper_id',
         'document_type',

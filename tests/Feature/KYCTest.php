@@ -116,4 +116,48 @@ class KYCTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    /**
+     * A helper profile must not flip back to "approved" just because the
+     * last *pending* document cleared — a document that was rejected earlier
+     * must keep the profile rejected.
+     */
+    public function test_profile_stays_rejected_if_any_document_was_rejected()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $helper = User::factory()->create(['role' => 'helper']);
+        $helperProfile = HelperProfile::factory()->create([
+            'user_id' => $helper->id,
+            'kyc_status' => 'pending',
+        ]);
+        $rejectedDoc = KYCDocument::factory()->create([
+            'helper_id' => $helperProfile->id,
+            'status' => 'pending',
+        ]);
+        $secondDoc = KYCDocument::factory()->create([
+            'helper_id' => $helperProfile->id,
+            'status' => 'pending',
+        ]);
+        $token = $admin->createToken('auth-token')->plainTextToken;
+
+        $this->withToken($token)
+            ->patchJson("/api/admin/kyc/{$rejectedDoc->id}/reject")
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('helper_profiles', [
+            'id' => $helperProfile->id,
+            'kyc_status' => 'rejected',
+        ]);
+
+        // Approving the remaining document must NOT flip the profile back
+        // to approved, since the first document is still rejected.
+        $this->withToken($token)
+            ->patchJson("/api/admin/kyc/{$secondDoc->id}/approve")
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('helper_profiles', [
+            'id' => $helperProfile->id,
+            'kyc_status' => 'rejected',
+        ]);
+    }
 }

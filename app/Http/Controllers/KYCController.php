@@ -83,11 +83,15 @@ class KYCController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        // Update helper profile KYC status if all documents are approved
+        // Only mark the profile approved once every document is approved.
+        // Checking for "no pending" alone would also flip an already-rejected
+        // profile back to approved as soon as its last pending doc clears.
         $helperProfile = $document->helper;
-        $pendingDocuments = $helperProfile->kycDocuments()->where('status', 'pending')->count();
-        
-        if ($pendingDocuments === 0) {
+        $hasOutstandingDocuments = $helperProfile->kycDocuments()
+            ->whereIn('status', ['pending', 'rejected'])
+            ->exists();
+
+        if (!$hasOutstandingDocuments) {
             $helperProfile->update(['kyc_status' => 'approved']);
         }
 
