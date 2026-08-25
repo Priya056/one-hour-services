@@ -85,4 +85,12 @@ class HelperProfile extends Model
     {
         return $this->hasMany(WithdrawalRequest::class, 'helper_id');
     }
+
+    /**
+     * Relationship: Reviews
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'helper_id');
+    }
 }

@@ -53,7 +53,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/helper/services', App\Http\Controllers\HelperServiceController::class . '@store');
     Route::put('/helper/services/{id}', App\Http\Controllers\HelperServiceController::class . '@update');
     Route::delete('/helper/services/{id}', App\Http\Controllers\HelperServiceController::class . '@destroy');
+
+    // Booking Routes
+    Route::get('/bookings', App\Http\Controllers\BookingController::class . '@index');
+    Route::post('/bookings', App\Http\Controllers\BookingController::class . '@store');
+    Route::get('/bookings/{id}', App\Http\Controllers\BookingController::class . '@show');
+    Route::patch('/bookings/{id}/status', App\Http\Controllers\BookingController::class . '@updateStatus');
+    Route::patch('/bookings/{id}/cancel', App\Http\Controllers\BookingController::class . '@cancel');
+    Route::delete('/bookings/{id}', App\Http\Controllers\BookingController::class . '@destroy');
+
+    // Review Routes
+    Route::post('/reviews', App\Http\Controllers\ReviewController::class . '@store');
+    Route::get('/reviews/{id}', App\Http\Controllers\ReviewController::class . '@show');
 });
+
+// Public Routes (no authentication required)
+Route::get('/helpers/{helperId}/reviews', App\Http\Controllers\ReviewController::class . '@helperReviews');
 
 // Admin Routes (require admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
