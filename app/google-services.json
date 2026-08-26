@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "123456789000",
-    "project_id": "one-hour-marketplace-placeholder",
-    "storage_bucket": "one-hour-marketplace-placeholder.appspot.com"
+    "project_number": "755073203146",
+    "project_id": "one-hour-services-e31e0",
+    "storage_bucket": "one-hour-services-e31e0.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789000:android:abcdef1234567890",
+        "mobilesdk_app_id": "1:755073203146:android:63de84a4ff242b78b9ed33",
         "android_client_info": {
           "package_name": "com.marketplace.onehour"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSy_Placeholder_Key_For_Development"
+          "current_key": "AIzaSyCC2E59T_sqbWGYxkrgirQVJbs_O7DAybE"
         }
       ],
       "services": {
