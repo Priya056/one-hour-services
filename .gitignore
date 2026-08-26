@@ -21,3 +21,4 @@ admin-dashboard/dist
 admin-dashboard/snap.js
 admin-dashboard/dashboard_screen1.png
 admin-dashboard/*.log
+admin-dashboard/*.tsbuildinfo

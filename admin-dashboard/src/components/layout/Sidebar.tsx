@@ -24,8 +24,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  pendingKycCount = 5,
-  openComplaintsCount = 3,
+  pendingKycCount = 0,
+  openComplaintsCount = 0,
 }) => {
   const navItems = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
