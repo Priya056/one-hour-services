@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.AppTopBar
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,14 +128,18 @@ fun BookingScreen(
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = helper.photoUrl,
-                            contentDescription = helper.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
+                        if (helper.photoUrl.isNotBlank()) {
+                            AsyncImage(
+                                model = helper.photoUrl,
+                                contentDescription = helper.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        } else {
+                            InitialsAvatar(name = helper.name, size = 56.dp, shape = RoundedCornerShape(12.dp))
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(text = helper.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)

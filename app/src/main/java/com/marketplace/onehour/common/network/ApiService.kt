@@ -132,6 +132,7 @@ data class ReviewDto(
 // ---- Request bodies ----
 data class RegisterRequestBody(val name: String, val phone: String, val email: String?, val password: String, val role: String)
 data class LoginRequestBody(val phone: String, val password: String)
+data class FirebaseLoginRequestBody(val idToken: String)
 data class BecomeHelperRequestBody(val bio: String?, val experienceYears: Int?, val serviceRadiusKm: Double?)
 data class KycSubmitRequestBody(val documentType: String, val documentUrl: String)
 data class HelperServiceRequestBody(val categoryId: Int, val hourlyRate: Double)
@@ -177,6 +178,9 @@ interface ApiService {
 
     @POST("api/login")
     suspend fun login(@Body body: LoginRequestBody): AuthResponse
+
+    @POST("api/auth/firebase-login")
+    suspend fun firebaseLogin(@Body body: FirebaseLoginRequestBody): AuthResponse
 
     @POST("api/logout")
     suspend fun logout()

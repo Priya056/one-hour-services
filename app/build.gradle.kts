@@ -13,8 +13,8 @@ android {
         applicationId = "com.marketplace.onehour"
         minSdk = 24
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 7
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -78,6 +78,11 @@ dependencies {
 
     // Real device GPS location
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Real SMS OTP login (Firebase Phone Auth) — replaces the old
+    // mock-123456 flow in AuthViewModel/LoginRegisterScreen.
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-auth")
 
     // Firebase App Distribution — in-app "check for update" button. debugImplementation
     // only: this has no business being in a real release build a client would get
