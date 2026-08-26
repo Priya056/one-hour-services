@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "338211778655",
+    "project_id": "one-hour-services",
+    "storage_bucket": "one-hour-services.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:338211778655:android:be357ac07255a74fa46bea",
+        "android_client_info": {
+          "package_name": "com.marketplace.onehour"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9mFlkLPScYKiihI8BDgUKKh_UwNrZMXk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
