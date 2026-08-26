@@ -240,9 +240,10 @@ class PaymentTest extends TestCase
     }
 
     /**
-     * Unpaid booking is not visible to helper.
+     * Helper can see all bookings assigned to them, regardless of payment status.
+     * Business logic changed: helpers see all bookings, payment status is handled separately.
      */
-    public function test_unpaid_booking_not_visible_to_helper()
+    public function test_helper_can_see_all_assigned_bookings()
     {
         $customer = User::factory()->create(['role' => 'customer']);
         $helper = User::factory()->create(['role' => 'helper']);
@@ -270,12 +271,13 @@ class PaymentTest extends TestCase
 
         $token = $helper->createToken('auth-token')->plainTextToken;
 
-        // Helper should not see unpaid booking
+        // Helper should see the booking even though payment is pending
         $response = $this->withToken($token)
             ->getJson('/api/bookings');
 
         $response->assertStatus(200);
-        $this->assertCount(0, $response->json('data'));
+        $this->assertCount(1, $response->json('data'));
+        $this->assertEquals($booking->id, $response->json('data.0.id'));
     }
 
     /**

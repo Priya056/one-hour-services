@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Authentication Routes
 Route::post('/register', App\Http\Controllers\AuthController::class . '@register');
 Route::post('/login', App\Http\Controllers\AuthController::class . '@login');
+Route::post('/auth/firebase-login', App\Http\Controllers\AuthController::class . '@firebaseLogin');
 Route::post('/logout', App\Http\Controllers\AuthController::class . '@logout')->middleware('auth:sanctum');
 
 // Protected Routes (require authentication)
@@ -84,12 +85,16 @@ Route::post('/webhooks/razorpay', App\Http\Controllers\WebhookController::class 
 
 // Admin Routes (require admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Admin User Management
+    Route::get('/admin/users', App\Http\Controllers\UserController::class . '@adminIndex');
+
     // Admin Helper Management
     Route::get('/admin/helpers', App\Http\Controllers\HelperController::class . '@index');
     Route::patch('/admin/helpers/{id}/approve', App\Http\Controllers\HelperController::class . '@approve');
     Route::patch('/admin/helpers/{id}/reject', App\Http\Controllers\HelperController::class . '@reject');
 
     // Admin KYC Review
+    Route::get('/admin/kyc', App\Http\Controllers\KYCController::class . '@adminIndex');
     Route::patch('/admin/kyc/{id}/approve', App\Http\Controllers\KYCController::class . '@approve');
     Route::patch('/admin/kyc/{id}/reject', App\Http\Controllers\KYCController::class . '@reject');
 

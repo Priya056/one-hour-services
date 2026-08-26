@@ -31,3 +31,7 @@
 # Temporary local setup
 /database_backup/
 /laravel_temp/
+
+# Local dev artifacts — never real source
+*.sqlite
+/public/hot

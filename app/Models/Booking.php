@@ -163,13 +163,12 @@ class Booking extends Model
 
     /**
      * Scope: Bookings for a helper
+     * Note: Helpers see all bookings assigned to them, regardless of payment status.
+     * Payment status filtering is handled at the business logic level if needed.
      */
     public function scopeForHelper($query, $helperId)
     {
-        return $query->where('helper_id', $helperId)
-            ->whereHas('payment', function ($paymentQuery) {
-                $paymentQuery->where('status', 'success');
-            });
+        return $query->where('helper_id', $helperId);
     }
 
     /**
