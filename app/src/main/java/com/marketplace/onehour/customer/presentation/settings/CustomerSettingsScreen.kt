@@ -22,9 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.marketplace.onehour.BuildConfig
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.CustomerBottomNavBar
 import com.marketplace.onehour.common.theme.SuccessGreen
+import com.marketplace.onehour.common.update.AppUpdateChecker
 
 @Composable
 fun CustomerSettingsScreen(
@@ -223,6 +225,63 @@ fun CustomerSettingsScreen(
                     SettingsRowItem(icon = Icons.Default.HelpOutline, title = "Help & Support", subtitle = "FAQs, Live Chat & Contact Us", onClick = {})
                     Divider(color = Color.Gray.copy(alpha = 0.1f))
                     SettingsRowItem(icon = Icons.Default.Description, title = "Terms & Privacy Policy", subtitle = "Legal terms & privacy rights", onClick = {})
+                }
+            }
+
+            // Check for Update — debug builds only, never shows in a real
+            // client release. See common.update.AppUpdateChecker.
+            if (BuildConfig.DEBUG) {
+                var updateStatus by remember { mutableStateOf<String?>(null) }
+                var isCheckingUpdate by remember { mutableStateOf(false) }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !isCheckingUpdate) {
+                                    isCheckingUpdate = true
+                                    updateStatus = null
+                                    AppUpdateChecker.checkForUpdate(
+                                        onNoUpdateAvailable = {
+                                            isCheckingUpdate = false
+                                            updateStatus = "You're on the latest build."
+                                        },
+                                        onError = { message ->
+                                            isCheckingUpdate = false
+                                            updateStatus = message
+                                        }
+                                    )
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(text = "Check for Update", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text(text = "Dev build v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", fontSize = 11.sp, color = Color.Gray)
+                                }
+                            }
+                            if (isCheckingUpdate) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+                            }
+                        }
+                        if (updateStatus != null) {
+                            Text(
+                                text = updateStatus!!,
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
                 }
             }
 
