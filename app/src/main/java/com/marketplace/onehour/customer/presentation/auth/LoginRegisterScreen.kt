@@ -140,21 +140,6 @@ fun LoginRegisterScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Helpful Mock Badge
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = "💡 Mock Testing Mode: Auto-filled OTP code is 123456",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
                         if (state.errorMessage != null) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(

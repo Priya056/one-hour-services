@@ -13,5 +13,8 @@ data class BookingState(
     val platformFee: Double = 3.50,
     val taxAmount: Double = 1.50,
     val totalAmount: Double = 40.0,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isCreatingBooking: Boolean = false,
+    val errorMessage: String? = null,
+    val createdBookingId: Int? = null
 )

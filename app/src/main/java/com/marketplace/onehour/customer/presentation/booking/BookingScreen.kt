@@ -30,9 +30,9 @@ import com.marketplace.onehour.common.components.PrimaryButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingScreen(
-    helperId: String,
+    helperId: Int,
     onBackClick: () -> Unit,
-    onProceedToPayment: (bookingId: String) -> Unit,
+    onProceedToPayment: (bookingId: Int) -> Unit,
     viewModel: BookingViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -77,8 +77,15 @@ fun BookingScreen(
                     }
 
                     PrimaryButton(
-                        text = "Proceed to Payment",
-                        onClick = { onProceedToPayment("b_mock_101") },
+                        text = if (state.isCreatingBooking) "Creating Booking..." else "Proceed to Payment",
+                        onClick = { 
+                            if (!state.isCreatingBooking) {
+                                viewModel.createBooking { bookingId ->
+                                    onProceedToPayment(bookingId)
+                                }
+                            }
+                        },
+                        enabled = !state.isCreatingBooking,
                         modifier = Modifier.width(200.dp)
                     )
                 }

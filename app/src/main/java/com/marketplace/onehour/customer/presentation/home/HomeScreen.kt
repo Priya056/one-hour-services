@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.CustomerBottomNavBar
@@ -35,7 +36,7 @@ import com.marketplace.onehour.common.theme.SuccessGreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onHelperClick: (String) -> Unit,
+    onHelperClick: (Int) -> Unit,
     onOpenFilterSheet: () -> Unit,
     onNavigateBottom: (String) -> Unit,
     viewModel: HomeViewModel = viewModel()
@@ -58,7 +59,7 @@ fun HomeScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { /* Select location modal */ }
+                        modifier = Modifier.clickable { viewModel.showLocationDialog() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
@@ -179,19 +180,15 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            if (!state.isMapView) {
-                // List View Content
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+        if (!state.isMapView) {
+            // List View Content
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                     item {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
@@ -251,31 +248,46 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
-            } else {
-                // Map View Content
-                Box(modifier = Modifier.fillMaxSize()) {
-                    MapsPlaceholder(
-                        modifier = Modifier.fillMaxSize(),
-                        label = "Google Maps SDK Integration — Displaying ${state.nearbyHelpers.size} Nearby Helpers"
-                    )
+            }
+        } else {
+            // Map View Content
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                MapsPlaceholder(
+                    modifier = Modifier.fillMaxSize(),
+                    label = "Google Maps SDK Integration — Displaying ${state.nearbyHelpers.size} Nearby Helpers"
+                )
 
-                    // Helper Card Preview overlay at bottom of map
-                    if (state.nearbyHelpers.isNotEmpty()) {
-                        val firstHelper = state.nearbyHelpers.first()
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(16.dp)
-                        ) {
-                            HelperListItemCard(
-                                helper = firstHelper,
-                                onClick = { onHelperClick(firstHelper.id) }
-                            )
-                        }
+                // Helper Card Preview overlay at bottom of map
+                if (state.nearbyHelpers.isNotEmpty()) {
+                    val firstHelper = state.nearbyHelpers.first()
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                    ) {
+                        HelperListItemCard(
+                            helper = firstHelper,
+                            onClick = { onHelperClick(firstHelper.id) }
+                        )
                     }
                 }
             }
         }
+    }
+
+    // Location Selection Dialog
+    if (state.showLocationDialog) {
+        LocationSelectionDialog(
+            currentLocation = state.userLocation,
+            onDismiss = { viewModel.hideLocationDialog() },
+            onLocationSelected = { name, lat, lng ->
+                viewModel.selectPresetLocation(name, lat, lng)
+            }
+        )
     }
 }
 
@@ -321,16 +333,7 @@ private fun CategoryCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val icon = when (category.iconName) {
-        "Bolt" -> Icons.Default.Bolt
-        "School" -> Icons.Default.School
-        "Camera" -> Icons.Default.CameraAlt
-        "Build" -> Icons.Default.Build
-        "DirectionsRun" -> Icons.Default.DirectionsRun
-        "Palette" -> Icons.Default.Palette
-        "BusinessCenter" -> Icons.Default.BusinessCenter
-        else -> Icons.Default.Person
-    }
+    val icon = Icons.Default.Person // Default icon since backend provides icon_url
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -387,7 +390,7 @@ fun HelperListItemCard(
         ) {
             Box {
                 AsyncImage(
-                    model = helper.photoUrl,
+                    model = helper.profile_photo_url,
                     contentDescription = helper.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -395,17 +398,6 @@ fun HelperListItemCard(
                         .clip(RoundedCornerShape(14.dp))
                         .background(Color.Gray.copy(alpha = 0.2f))
                 )
-
-                if (helper.isAvailable) {
-                    Box(
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clip(CircleShape)
-                            .background(SuccessGreen)
-                            .align(Alignment.TopEnd)
-                            .offset(x = 2.dp, y = (-2).dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -421,22 +413,26 @@ fun HelperListItemCard(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "$${helper.hourlyRate.toInt()}/hr",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    helper.hourly_rate?.let { rate ->
+                        Text(
+                            text = "$${rate.toInt()}/hr",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = helper.mainCategory,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Medium
-                )
+                helper.category?.let { category ->
+                    Text(
+                        text = category.name,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -449,7 +445,7 @@ fun HelperListItemCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${helper.rating} (${helper.reviewCount})",
+                        text = "${helper.average_rating} (${helper.total_reviews})",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -462,10 +458,100 @@ fun HelperListItemCard(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "${helper.distanceKm} km away",
+                        text = "${helper.distance_km} km away",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LocationSelectionDialog(
+    currentLocation: String,
+    onDismiss: () -> Unit,
+    onLocationSelected: (name: String, lat: Double, lng: Double) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Select Location",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Divider()
+                
+                // Preset locations
+                val locations = listOf(
+                    "Indiranagar, Bengaluru" to Pair(12.9716, 77.5946),
+                    "Koramangala, Bengaluru" to Pair(12.9352, 77.6245),
+                    "HSR Layout, Bengaluru" to Pair(12.9141, 77.6331),
+                    "Whitefield, Bengaluru" to Pair(12.9698, 77.7499),
+                    "Electronic City, Bengaluru" to Pair(12.8356, 77.6766)
+                )
+                
+                locations.forEach { (name, coords) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                onLocationSelected(name, coords.first, coords.second)
+                            }
+                            .background(
+                                if (name == currentLocation)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                else
+                                    MaterialTheme.colorScheme.surface
+                            )
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = if (name == currentLocation)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = name,
+                            fontWeight = if (name == currentLocation) FontWeight.Bold else FontWeight.Normal,
+                            color = if (name == currentLocation)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurface
+                        )
+                        if (name == currentLocation) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancel")
                 }
             }
         }
