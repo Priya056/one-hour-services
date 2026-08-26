@@ -18,8 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.marketplace.onehour.common.theme.AccentPurple
-import com.marketplace.onehour.common.theme.PrimaryBlue
+import com.marketplace.onehour.common.theme.BarlowCondensed
+import com.marketplace.onehour.common.theme.TealDeep
+import com.marketplace.onehour.common.theme.Terracotta
 
 @Composable
 fun SplashScreen(
@@ -51,9 +52,9 @@ fun SplashScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF0F172A),
-                        PrimaryBlue.copy(alpha = 0.6f),
-                        AccentPurple.copy(alpha = 0.8f)
+                        Color(0xFF13201C),
+                        TealDeep,
+                        Terracotta.copy(alpha = 0.85f)
                     )
                 )
             ),
@@ -83,7 +84,8 @@ fun SplashScreen(
 
             Text(
                 text = "1-HOUR",
-                fontSize = 32.sp,
+                fontFamily = BarlowCondensed,
+                fontSize = 40.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White,
                 letterSpacing = 4.sp
