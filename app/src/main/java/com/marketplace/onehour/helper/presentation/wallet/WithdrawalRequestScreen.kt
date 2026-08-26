@@ -12,18 +12,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WithdrawalRequestScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: WithdrawalViewModel = viewModel()
 ) {
-    var amount by remember { mutableStateOf("2000") }
+    val state by viewModel.state.collectAsState()
+    var amount by remember { mutableStateOf("") }
     var payoutType by remember { mutableStateOf("UPI") } // UPI or Bank
-    var upiId by remember { mutableStateOf("vikram@okaxis") }
+    var upiId by remember { mutableStateOf("") }
     var accountNumber by remember { mutableStateOf("") }
     var ifscCode by remember { mutableStateOf("") }
-    var isSubmitted by remember { mutableStateOf(false) }
+    val isSubmitted = state.isSubmitted
 
     Scaffold(
         topBar = {
@@ -136,12 +139,21 @@ fun WithdrawalRequestScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                if (state.errorMessage != null) {
+                    Text(text = state.errorMessage!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                }
+
                 Button(
-                    onClick = { isSubmitted = true },
+                    onClick = {
+                        amount.toDoubleOrNull()?.let {
+                            viewModel.submitWithdrawal(it, payoutType, upiId, accountNumber, ifscCode)
+                        }
+                    },
+                    enabled = !state.isSubmitting && amount.toDoubleOrNull() != null,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Submit Payout Request")
+                    Text(if (state.isSubmitting) "Submitting..." else "Submit Payout Request")
                 }
             }
         }

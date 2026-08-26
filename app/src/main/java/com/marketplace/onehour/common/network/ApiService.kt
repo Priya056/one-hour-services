@@ -151,6 +151,22 @@ data class CreateReviewRequestBody(val bookingId: Int, val helperId: Int, val ra
 data class CreateAvailabilityRequestBody(val dayOfWeek: Int, val startTime: String, val endTime: String)
 data class AvailabilityDto(val id: Int, val dayOfWeek: Int, val startTime: String, val endTime: String)
 
+data class WalletTransactionDto(
+    val id: Int,
+    val type: String,
+    val amount: Double,
+    val status: String,
+    val bookingId: Int?,
+    val createdAt: String
+)
+data class WalletDto(
+    val id: Int,
+    val balance: Double,
+    val transactions: List<WalletTransactionDto>
+)
+data class WithdrawRequestBody(val amount: Double, val bankAccountDetails: Map<String, String>)
+data class WithdrawResponse(val message: String, val withdrawalRequestId: Int, val amount: Double, val status: String)
+
 /**
  * Real backend endpoints. Base URL / auth header are handled by ApiClient.
  * No /v1 prefix, snake_case JSON — see ApiClient's Gson config.
@@ -217,4 +233,10 @@ interface ApiService {
 
     @GET("api/helpers/{helperId}/reviews")
     suspend fun getHelperReviews(@Path("helperId") helperId: Int): DataListWrapper<ReviewDto>
+
+    @GET("api/wallet")
+    suspend fun getWallet(): DataWrapper<WalletDto>
+
+    @POST("api/wallet/withdraw")
+    suspend fun withdraw(@Body body: WithdrawRequestBody): WithdrawResponse
 }
