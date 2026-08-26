@@ -2,11 +2,16 @@ package com.marketplace.onehour.customer.presentation.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marketplace.onehour.common.network.ApiClient
 import com.marketplace.onehour.common.network.BookingDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+private val COMPLETED_STATUSES = setOf("completed", "cancelled")
 
 class HistoryViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HistoryState())
@@ -20,45 +25,43 @@ class HistoryViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(selectedTabIndex = index)
     }
 
+    fun refresh() = loadBookings()
+
     private fun loadBookings() {
+        _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            val upcoming = listOf(
-                BookingDto(
-                    id = "b101",
-                    helperId = "h1",
-                    helperName = "Alex Rivera",
-                    serviceName = "Electrical Inspection & Socket Fix",
-                    status = "On the way",
-                    scheduledTime = "Today, 02:00 PM",
-                    totalAmount = 40.0
+            try {
+                val bookings = ApiClient.api.getBookingsRaw().data.map { booking ->
+                    BookingDto(
+                        id = booking.id.toString(),
+                        helperId = booking.helperId.toString(),
+                        helperName = booking.helper?.user?.name ?: "Helper",
+                        serviceName = booking.category?.name ?: "1-Hour Service",
+                        status = booking.status.replace('_', ' ')
+                            .replaceFirstChar { it.uppercase() },
+                        scheduledTime = formatScheduledTime(booking.scheduledTime),
+                        totalAmount = booking.totalAmount
+                    )
+                }
+                _uiState.value = _uiState.value.copy(
+                    upcomingBookings = bookings.filterNot { rawStatusOf(it) in COMPLETED_STATUSES },
+                    pastBookings = bookings.filter { rawStatusOf(it) in COMPLETED_STATUSES },
+                    isLoading = false
                 )
-            )
-
-            val past = listOf(
-                BookingDto(
-                    id = "b102",
-                    helperId = "h2",
-                    helperName = "Sarah Jenkins",
-                    serviceName = "Grocery & Document Errands",
-                    status = "Completed",
-                    scheduledTime = "Yesterday, 11:00 AM",
-                    totalAmount = 28.0
-                ),
-                BookingDto(
-                    id = "b103",
-                    helperId = "h4",
-                    helperName = "David Chen",
-                    serviceName = "Physics & Math 1-Hour Crash Course",
-                    status = "Completed",
-                    scheduledTime = "15 Aug 2026, 04:00 PM",
-                    totalAmount = 40.0
-                )
-            )
-
-            _uiState.value = _uiState.value.copy(
-                upcomingBookings = upcoming,
-                pastBookings = past
-            )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
         }
+    }
+
+    // BookingDto.status is already the display-formatted string by this point,
+    // so recover the raw form to bucket upcoming vs past consistently.
+    private fun rawStatusOf(booking: BookingDto): String =
+        booking.status.lowercase().replace(' ', '_')
+
+    private fun formatScheduledTime(isoTime: String): String = try {
+        OffsetDateTime.parse(isoTime).format(DateTimeFormatter.ofPattern("d MMM, h:mm a"))
+    } catch (e: Exception) {
+        isoTime
     }
 }
