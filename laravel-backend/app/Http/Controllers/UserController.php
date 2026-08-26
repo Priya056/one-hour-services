@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProfileRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -31,5 +31,15 @@ class UserController extends Controller
         ]));
 
         return new UserResource($user);
+    }
+
+    /**
+     * Admin: List all users.
+     */
+    public function adminIndex(Request $request)
+    {
+        return UserResource::collection(
+            \App\Models\User::orderBy('created_at', 'desc')->get()
+        );
     }
 }

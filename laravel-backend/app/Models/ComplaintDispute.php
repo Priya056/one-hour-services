@@ -12,6 +12,10 @@ class ComplaintDispute extends Model
 {
     use HasFactory;
 
+    // Eloquent's class-name convention would guess "complaint_disputes"; the
+    // migration created "complaints_disputes".
+    protected $table = 'complaints_disputes';
+
     protected $fillable = [
         'booking_id',
         'raised_by',
