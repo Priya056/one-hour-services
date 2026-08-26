@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.BookingStatusStepper
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 import com.marketplace.onehour.common.placeholders.MapsPlaceholder
 import com.marketplace.onehour.common.theme.SuccessGreen
@@ -120,14 +121,18 @@ fun LiveTrackingScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                AsyncImage(
-                                    model = helper.photoUrl,
-                                    contentDescription = helper.name,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(54.dp)
-                                        .clip(CircleShape)
-                                )
+                                if (helper.photoUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = helper.photoUrl,
+                                        contentDescription = helper.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .clip(CircleShape)
+                                    )
+                                } else {
+                                    InitialsAvatar(name = helper.name, size = 54.dp, shape = CircleShape)
+                                }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(text = helper.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)

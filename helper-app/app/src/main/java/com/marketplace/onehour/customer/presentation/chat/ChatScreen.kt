@@ -16,12 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.placeholders.FirebaseChatPlaceholder
 import com.marketplace.onehour.common.theme.SuccessGreen
 import java.text.SimpleDateFormat
@@ -55,14 +60,21 @@ fun ChatScreen(
                     if (state.helper != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box {
-                                AsyncImage(
-                                    model = state.helper!!.photoUrl,
-                                    contentDescription = state.helper!!.name,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                )
+                                if (state.helper!!.photoUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(state.helper!!.photoUrl)
+                                            .crossfade(250)
+                                            .build(),
+                                        contentDescription = state.helper!!.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                    )
+                                } else {
+                                    InitialsAvatar(name = state.helper!!.name, size = 40.dp, shape = CircleShape)
+                                }
                                 Box(
                                     modifier = Modifier
                                         .size(10.dp)
@@ -147,8 +159,12 @@ fun ChatScreen(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        val haptics = LocalHapticFeedback.current
                         FloatingActionButton(
-                            onClick = { viewModel.sendMessage() },
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.sendMessage()
+                            },
                             containerColor = MaterialTheme.colorScheme.primary,
                             shape = CircleShape,
                             modifier = Modifier.size(46.dp)
@@ -166,25 +182,6 @@ fun ChatScreen(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Firestore TODO Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF1E293B))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Cloud, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "TODO: Firebase Firestore Real-Time Listener Active (`chats/${state.bookingId}`)",
-                        color = Color(0xFF38BDF8),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
             // Message Bubble List
             LazyColumn(
                 state = listState,
