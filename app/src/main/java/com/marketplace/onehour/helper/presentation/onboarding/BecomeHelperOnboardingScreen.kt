@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.PrimaryButton
+import com.marketplace.onehour.common.theme.StarYellow
+import com.marketplace.onehour.common.theme.TealDeep
 
 @Composable
 fun BecomeHelperOnboardingScreen(
@@ -93,7 +95,7 @@ fun BecomeHelperOnboardingScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+                colors = CardDefaults.cardColors(containerColor = TealDeep)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -103,10 +105,10 @@ fun BecomeHelperOnboardingScreen(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF38BDF8).copy(alpha = 0.15f)),
+                            .background(StarYellow.copy(alpha = 0.18f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = StarYellow, modifier = Modifier.size(32.dp))
                     }
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(

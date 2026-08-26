@@ -10,10 +10,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// Category icon/color assignment is cosmetic only (backend doesn't store either);
-// rotates through a fixed palette by list position.
-private val CATEGORY_ICONS = listOf("Person", "Bolt", "School", "Camera", "Build", "DirectionsRun", "Palette", "BusinessCenter")
-private val CATEGORY_COLORS = listOf(0xFF7C3AED, 0xFF2563EB, 0xFF10B981, 0xFFF59E0B, 0xFFEF4444, 0xFF8B5CF6, 0xFFEC4899, 0xFF06B6D4)
+// Category icon/color assignment is cosmetic only (backend doesn't store
+// either) — keyed by name rather than list position so it stays correct
+// even if categories get reordered or new ones are added on the backend.
+private val CATEGORY_ICONS = mapOf(
+    "Personal Assistance" to "Person",
+    "Electrical" to "Bolt",
+    "Tutoring" to "School",
+    "Photography" to "Camera",
+    "Home Repairs" to "Build",
+    "Errands & Delivery" to "DirectionsRun",
+    "Design/Creative" to "Palette",
+    "Business/Professional" to "BusinessCenter"
+)
+private val CATEGORY_COLORS = mapOf(
+    "Personal Assistance" to 0xFF7C3AED,
+    "Electrical" to 0xFF2563EB,
+    "Tutoring" to 0xFF10B981,
+    "Photography" to 0xFFF59E0B,
+    "Home Repairs" to 0xFFEF4444,
+    "Errands & Delivery" to 0xFF8B5CF6,
+    "Design/Creative" to 0xFFEC4899,
+    "Business/Professional" to 0xFF06B6D4
+)
+private const val DEFAULT_CATEGORY_ICON = "Person"
+private const val DEFAULT_CATEGORY_COLOR = 0xFF7C3AED
 
 class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeState())
@@ -30,12 +51,12 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val categoriesResponse = ApiClient.api.getCategories()
-                val categories = categoriesResponse.data.mapIndexed { index, dto ->
+                val categories = categoriesResponse.data.map { dto ->
                     CategoryItem(
                         id = dto.id.toString(),
                         name = dto.name,
-                        iconName = CATEGORY_ICONS[index % CATEGORY_ICONS.size],
-                        colorHex = CATEGORY_COLORS[index % CATEGORY_COLORS.size]
+                        iconName = CATEGORY_ICONS[dto.name] ?: DEFAULT_CATEGORY_ICON,
+                        colorHex = CATEGORY_COLORS[dto.name] ?: DEFAULT_CATEGORY_COLOR
                     )
                 }
                 _uiState.value = _uiState.value.copy(categories = categories)

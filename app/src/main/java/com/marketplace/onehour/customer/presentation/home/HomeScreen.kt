@@ -1,13 +1,21 @@
 package com.marketplace.onehour.customer.presentation.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,8 +26,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -28,7 +40,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.marketplace.onehour.common.components.CustomerBottomNavBar
+import com.marketplace.onehour.common.components.InitialsAvatar
+import com.marketplace.onehour.common.components.categoryPhotoUrl
 import com.marketplace.onehour.common.location.LocationProvider
 import com.marketplace.onehour.common.network.HelperDto
 import com.marketplace.onehour.common.network.LocationDefaults
@@ -36,6 +51,7 @@ import com.marketplace.onehour.common.placeholders.MapsPlaceholder
 import com.marketplace.onehour.common.theme.StarYellow
 import com.marketplace.onehour.common.theme.SuccessGreen
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -239,15 +255,16 @@ fun HomeScreen(
                             columns = GridCells.Fixed(4),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(210.dp),
+                                .height(238.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             userScrollEnabled = false
                         ) {
-                            items(state.categories) { cat ->
+                            itemsIndexed(state.categories) { index, cat ->
                                 CategoryCard(
                                     category = cat,
                                     isSelected = state.selectedCategory == cat.id,
+                                    index = index,
                                     onClick = { viewModel.onCategorySelected(cat.id) }
                                 )
                             }
@@ -320,12 +337,21 @@ private fun SegmentedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val background by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = tween(200),
+        label = "segment_bg"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(200),
+        label = "segment_content"
+    )
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-            )
+            .background(background)
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center
@@ -334,7 +360,7 @@ private fun SegmentedButton(
             Icon(
                 imageVector = icon,
                 contentDescription = text,
-                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                tint = contentColor,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -342,49 +368,132 @@ private fun SegmentedButton(
                 text = text,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                color = contentColor
             )
         }
     }
+}
+
+private fun categoryIconFor(iconName: String) = when (iconName) {
+    "Bolt" -> Icons.Default.Bolt
+    "School" -> Icons.Default.School
+    "Camera" -> Icons.Default.CameraAlt
+    "Build" -> Icons.Default.Build
+    "DirectionsRun" -> Icons.Default.DirectionsRun
+    "Palette" -> Icons.Default.Palette
+    "BusinessCenter" -> Icons.Default.BusinessCenter
+    else -> Icons.Default.Person
 }
 
 @Composable
 private fun CategoryCard(
     category: CategoryItem,
     isSelected: Boolean,
+    index: Int,
     onClick: () -> Unit
 ) {
-    val icon = when (category.iconName) {
-        "Bolt" -> Icons.Default.Bolt
-        "School" -> Icons.Default.School
-        "Camera" -> Icons.Default.CameraAlt
-        "Build" -> Icons.Default.Build
-        "DirectionsRun" -> Icons.Default.DirectionsRun
-        "Palette" -> Icons.Default.Palette
-        "BusinessCenter" -> Icons.Default.BusinessCenter
-        else -> Icons.Default.Person
+    val icon = categoryIconFor(category.iconName)
+    val haptics = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(index * 35L)
+        appeared = true
     }
+    val entrance by animateFloatAsState(
+        targetValue = if (appeared) 1f else 0f,
+        animationSpec = tween(320, easing = FastOutSlowInEasing),
+        label = "category_entrance"
+    )
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = tween(120),
+        label = "category_press"
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier
+            .scale((0.85f + entrance * 0.15f) * pressScale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            )
     ) {
         Box(
             modifier = Modifier
-                .size(54.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    if (isSelected) MaterialTheme.colorScheme.primary
-                    else Color(category.colorHex).copy(alpha = 0.15f)
-                ),
-            contentAlignment = Alignment.Center
+                .size(72.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .then(
+                    if (isSelected)
+                        Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(18.dp))
+                    else Modifier
+                )
         ) {
-            Icon(
-                imageVector = icon,
+            AsyncImage(
+                model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(categoryPhotoUrl(category.name))
+                    .crossfade(300)
+                    .build(),
                 contentDescription = category.name,
-                tint = if (isSelected) Color.White else Color(category.colorHex),
-                modifier = Modifier.size(26.dp)
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(category.colorHex).copy(alpha = 0.25f))
             )
+            // The photo is decorative texture, not a literal depiction of the
+            // category (there's no reliable free keyword-matched photo API),
+            // so a brand-color wash + bottom scrim reads as an intentional
+            // colorized backdrop rather than a mismatched stock photo.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(category.colorHex).copy(alpha = 0.38f))
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.5f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.6f)
+                        )
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else Color(category.colorHex),
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Selected",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(16.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -404,10 +513,27 @@ fun HelperListItemCard(
     helper: HelperDto,
     onClick: () -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = tween(120),
+        label = "helper_card_press"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .scale(pressScale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -419,15 +545,26 @@ fun HelperListItemCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box {
-                AsyncImage(
-                    model = helper.photoUrl,
-                    contentDescription = helper.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color.Gray.copy(alpha = 0.2f))
-                )
+                if (helper.photoUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(helper.photoUrl)
+                            .crossfade(250)
+                            .build(),
+                        contentDescription = helper.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color.Gray.copy(alpha = 0.2f))
+                    )
+                } else {
+                    InitialsAvatar(
+                        name = helper.name,
+                        size = 72.dp,
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                }
 
                 if (helper.isAvailable) {
                     Box(

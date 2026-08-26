@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.AppTopBar
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 import com.marketplace.onehour.common.components.StarRatingBar
 import com.marketplace.onehour.common.theme.StarYellow
@@ -90,14 +91,18 @@ fun RateReviewScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = helper.photoUrl,
-                            contentDescription = helper.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                        )
+                        if (helper.photoUrl.isNotBlank()) {
+                            AsyncImage(
+                                model = helper.photoUrl,
+                                contentDescription = helper.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            InitialsAvatar(name = helper.name, size = 64.dp, shape = CircleShape)
+                        }
                         Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(text = helper.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
