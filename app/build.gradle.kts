@@ -13,8 +13,8 @@ android {
         applicationId = "com.marketplace.onehour"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -75,6 +75,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Real device GPS location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // Firebase App Distribution — in-app "check for update" button. debugImplementation
     // only: this has no business being in a real release build a client would get

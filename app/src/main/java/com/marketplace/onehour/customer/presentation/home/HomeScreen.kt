@@ -24,13 +24,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.CustomerBottomNavBar
+import com.marketplace.onehour.common.location.LocationProvider
 import com.marketplace.onehour.common.network.HelperDto
+import com.marketplace.onehour.common.network.LocationDefaults
 import com.marketplace.onehour.common.placeholders.MapsPlaceholder
 import com.marketplace.onehour.common.theme.StarYellow
 import com.marketplace.onehour.common.theme.SuccessGreen
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +47,33 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    fun resolveLocation() {
+        coroutineScope.launch {
+            val device = LocationProvider.getCurrentLocation(context)
+            viewModel.setLocation(device.lat, device.lng, device.label)
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            resolveLocation()
+        } else {
+            viewModel.setLocation(LocationDefaults.LAT, LocationDefaults.LNG, LocationDefaults.FALLBACK_LABEL)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (LocationProvider.hasPermission(context)) {
+            resolveLocation()
+        } else {
+            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     Scaffold(
         topBar = {
