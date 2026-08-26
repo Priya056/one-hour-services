@@ -1,20 +1,46 @@
 package com.marketplace.onehour.common.placeholders
 
+import android.util.Log
+import com.marketplace.onehour.integration.firebase.ChatMessage
+import com.marketplace.onehour.integration.firebase.ChatRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
 /**
- * Firebase Firestore Chat Service integration placeholder.
- * TODO: Replace mock list listener with FirebaseFirestore.getInstance().collection("chats").
+ * Firebase Firestore Chat Service integration point.
+ * Delegates real-time message stream listening and message sending to ChatRepository.
  */
 object FirebaseChatPlaceholder {
-    data class ChatMessage(
-        val id: String,
-        val senderId: String,
-        val receiverId: String,
-        val text: String,
-        val timestamp: Long
-    )
 
-    fun sendChatMessage(bookingId: String, message: ChatMessage, onComplete: (Boolean) -> Unit) {
-        // TODO: Push message document to Firestore sub-collection
-        onComplete(true)
+    private val repository = ChatRepository()
+    private val scope = CoroutineScope(Dispatchers.IO)
+
+    fun listenToChatMessages(
+        bookingId: String,
+        onNewMessage: (List<ChatMessage>) -> Unit
+    ) {
+        Log.d("FirebaseChat", "Subscribing to Firestore real-time collection: chats/$bookingId/messages")
+        scope.launch {
+            repository.getMessagesStream(bookingId).collectLatest { messages ->
+                onNewMessage(messages)
+            }
+        }
+    }
+
+    fun sendChatMessage(
+        bookingId: String,
+        message: ChatMessage,
+        onComplete: (Boolean) -> Unit
+    ) {
+        Log.d("FirebaseChat", "Dispatching message to Firestore collection chats/$bookingId: ${message.text}")
+        repository.sendMessage(
+            bookingId = bookingId,
+            senderId = message.senderId,
+            senderName = message.senderName,
+            text = message.text,
+            onComplete = onComplete
+        )
     }
 }

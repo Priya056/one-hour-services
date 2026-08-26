@@ -28,6 +28,8 @@ fun PaymentScreen(
     onPaymentSuccess: (bookingId: String) -> Unit,
     viewModel: PaymentViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? android.app.Activity
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(bookingId) {
@@ -49,8 +51,8 @@ fun PaymentScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     PrimaryButton(
-                        text = if (state.isProcessing) "Processing Payment..." else "Pay $${"%.2f".format(state.totalAmount)} & Confirm",
-                        onClick = { viewModel.processPayment(onPaymentSuccess) },
+                        text = if (state.isProcessing) "Opening Razorpay..." else "Pay $${"%.2f".format(state.totalAmount)} & Confirm",
+                        onClick = { viewModel.processPayment(activity, onPaymentSuccess) },
                         enabled = !state.isProcessing
                     )
                 }

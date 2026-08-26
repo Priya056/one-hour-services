@@ -41,6 +41,7 @@ export interface Booking {
   commission: number;
   helperPayout: number;
   status: BookingStatus;
+  paymentStatus: 'paid' | 'pending' | 'failed';
   date: string;
   time: string;
   location: string;
@@ -67,3 +68,57 @@ export interface Category {
   commissionRate: number;
   status: 'active' | 'inactive';
 }
+
+export interface Refund {
+  id: string;
+  bookingNumber: string;
+  customerName: string;
+  helperName: string;
+  amount: number;
+  reason: string;
+  requestedAt: string;
+  status: 'pending' | 'approved' | 'declined';
+}
+
+export interface Complaint {
+  id: string;
+  ticketNumber: string;
+  customerName: string;
+  helperName: string;
+  category: string;
+  issueType: 'Late Arrival' | 'Poor Service Quality' | 'Billing Dispute' | 'Unprofessional Behavior';
+  priority: 'high' | 'medium' | 'low';
+  description: string;
+  status: 'open' | 'under_review' | 'resolved';
+  createdAt: string;
+}
+
+export interface Review {
+  id: string;
+  customerName: string;
+  helperName: string;
+  category: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  status: 'published' | 'flagged' | 'hidden';
+}
+
+export interface CommissionSetting {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  defaultCommissionRate: number;
+  minCommissionAmount: number;
+  isSurgeEnabled: boolean;
+}
+
+export interface LocationArea {
+  id: string;
+  cityName: string;
+  zoneName: string;
+  activeHelpersCount: number;
+  serviceRadiusKm: number;
+  status: 'active' | 'expanding' | 'paused';
+}
+

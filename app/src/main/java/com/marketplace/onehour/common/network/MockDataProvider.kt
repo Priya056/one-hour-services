@@ -20,7 +20,7 @@ object MockDataProvider {
             mainCategory = "Electrical Specialist",
             rating = 4.9,
             reviewCount = 124,
-            hourlyRate = 35.0,
+            hourlyRate = 500.0, // ₹500/hr
             distanceKm = 0.8,
             bio = "Certified electrician with 6+ years of experience in quick home fixes, wiring & diagnostics.",
             skills = listOf("Wiring", "Appliance Fitting", "Circuit Repair", "Lighting Installation"),
@@ -33,7 +33,7 @@ object MockDataProvider {
             mainCategory = "errands & delivery",
             rating = 4.8,
             reviewCount = 89,
-            hourlyRate = 28.0,
+            hourlyRate = 350.0, // ₹350/hr
             distanceKm = 1.2,
             bio = "Organized, prompt assistant for grocery runs, document delivery & local errands.",
             skills = listOf("Errands", "Document Delivery", "Grocery Pickup", "Admin Help"),
@@ -46,7 +46,7 @@ object MockDataProvider {
             mainCategory = "Photography",
             rating = 4.9,
             reviewCount = 67,
-            hourlyRate = 50.0,
+            hourlyRate = 1200.0, // ₹1200/hr
             distanceKm = 2.4,
             bio = "Professional portrait & event photographer for 1-hour fast turn-around headshots & coverage.",
             skills = listOf("Portrait Photography", "Event Coverage", "Product Shots", "Photo Editing"),
@@ -59,7 +59,7 @@ object MockDataProvider {
             mainCategory = "Tutoring",
             rating = 4.95,
             reviewCount = 142,
-            hourlyRate = 40.0,
+            hourlyRate = 600.0, // ₹600/hr
             distanceKm = 1.5,
             bio = "STEM Tutor specializing in High School & College Mathematics, Physics & Coding crash courses.",
             skills = listOf("Calculus", "Physics", "Python", "Exam Prep"),
@@ -72,19 +72,71 @@ object MockDataProvider {
             id = "b101",
             helperId = "h1",
             helperName = "Alex Rivera",
+            customerId = "u101",
+            customerName = "Priya Sharma",
             serviceName = "Electrical Inspection & Socket Repair",
-            status = "On the way",
+            status = "Completed",
+            paymentStatus = "paid",
             scheduledTime = "Today, 02:00 PM",
-            totalAmount = 35.0
+            totalAmount = 500.0, // ₹500
+            orderId = "order_mock_b101",
+            paymentId = "pay_mock_b101_succ"
         ),
         BookingDto(
             id = "b102",
             helperId = "h2",
             helperName = "Sarah Jenkins",
+            customerId = "u102",
+            customerName = "Ananya Verma",
             serviceName = "Grocery & Document Errands",
             status = "Completed",
+            paymentStatus = "paid",
             scheduledTime = "Yesterday, 11:00 AM",
-            totalAmount = 28.0
+            totalAmount = 350.0, // ₹350
+            orderId = "order_mock_b102",
+            paymentId = "pay_mock_b102_succ"
+        ),
+        BookingDto(
+            id = "b103",
+            helperId = "h3",
+            helperName = "Marcus Vance",
+            customerId = "u101",
+            customerName = "Priya Sharma",
+            serviceName = "Portrait Headshots Session",
+            status = "Requested",
+            paymentStatus = "pending",
+            scheduledTime = "Today, 05:00 PM",
+            totalAmount = 1200.0, // ₹1200
+            orderId = "order_mock_b103",
+            paymentId = null
+        ),
+        BookingDto(
+            id = "b104",
+            helperId = "h1",
+            helperName = "Alex Rivera",
+            customerId = "u103",
+            customerName = "Rahul Mehta",
+            serviceName = "Circuit Breaker Diagnostic",
+            status = "Cancelled",
+            paymentStatus = "failed",
+            scheduledTime = "2 days ago",
+            totalAmount = 600.0, // ₹600
+            orderId = "order_mock_b104",
+            paymentId = null
+        ),
+        BookingDto(
+            id = "b105",
+            helperId = "h4",
+            helperName = "David Chen",
+            customerId = "u102",
+            customerName = "Ananya Verma",
+            serviceName = "Math & Physics Crash Course",
+            status = "Completed",
+            paymentStatus = "paid",
+            scheduledTime = "3 days ago",
+            totalAmount = 600.0, // ₹600
+            orderId = "order_mock_b105",
+            paymentId = "pay_mock_b105_succ"
         )
     )
 }

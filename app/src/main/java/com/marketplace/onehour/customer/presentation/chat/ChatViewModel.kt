@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marketplace.onehour.common.network.MockDataProvider
 import com.marketplace.onehour.common.placeholders.FirebaseChatPlaceholder
-import kotlinx.coroutines.delay
+import com.marketplace.onehour.integration.firebase.ChatMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,18 +19,15 @@ class ChatViewModel : ViewModel() {
             val helper = MockDataProvider.sampleHelpers.find { it.id == helperId }
                 ?: MockDataProvider.sampleHelpers.first()
 
-            val initialMessages = listOf(
-                FirebaseChatPlaceholder.ChatMessage("m1", "h1", "c1", "Hi! I have accepted your 1-hour booking for electrical repair.", System.currentTimeMillis() - 600000),
-                FirebaseChatPlaceholder.ChatMessage("m2", "c1", "h1", "Hi Alex, are you on your way?", System.currentTimeMillis() - 400000),
-                FirebaseChatPlaceholder.ChatMessage("m3", "h1", "c1", "Yes, I am near 4th Cross! Will reach in 5 mins.", System.currentTimeMillis() - 200000),
-                FirebaseChatPlaceholder.ChatMessage("m4", "c1", "h1", "Great, I have the circuit breaker panel open for you.", System.currentTimeMillis() - 60000)
-            )
-
             _uiState.value = _uiState.value.copy(
                 bookingId = bookingId,
-                helper = helper,
-                messages = initialMessages
+                helper = helper
             )
+
+            // Subscribe to Firestore real-time message stream
+            FirebaseChatPlaceholder.listenToChatMessages(bookingId) { incomingMessages ->
+                _uiState.value = _uiState.value.copy(messages = incomingMessages)
+            }
         }
     }
 
@@ -42,36 +39,20 @@ class ChatViewModel : ViewModel() {
         val text = textOverride ?: _uiState.value.messageText
         if (text.isBlank()) return
 
-        val newMessage = FirebaseChatPlaceholder.ChatMessage(
+        val newMessage = ChatMessage(
             id = "m_${System.currentTimeMillis()}",
-            senderId = "c1",
-            receiverId = _uiState.value.helper?.id ?: "h1",
+            bookingId = _uiState.value.bookingId,
+            senderId = "u101",
+            senderName = "Priya Sharma",
             text = text,
             timestamp = System.currentTimeMillis()
         )
 
-        // TODO: In production, push message to Firebase Firestore sub-collection
-        FirebaseChatPlaceholder.sendChatMessage(_uiState.value.bookingId, newMessage) {
-            val updatedList = _uiState.value.messages + newMessage
-            _uiState.value = _uiState.value.copy(
-                messages = updatedList,
-                messageText = ""
-            )
-        }
+        _uiState.value = _uiState.value.copy(messageText = "")
 
-        // Simulate automatic helper reply after 2 seconds
-        viewModelScope.launch {
-            delay(2000)
-            val helperReply = FirebaseChatPlaceholder.ChatMessage(
-                id = "m_reply_${System.currentTimeMillis()}",
-                senderId = _uiState.value.helper?.id ?: "h1",
-                receiverId = "c1",
-                text = "Got it! Thanks for letting me know.",
-                timestamp = System.currentTimeMillis()
-            )
-            _uiState.value = _uiState.value.copy(
-                messages = _uiState.value.messages + helperReply
-            )
+        // Dispatch to Firestore / ChatRepository stream
+        FirebaseChatPlaceholder.sendChatMessage(_uiState.value.bookingId, newMessage) {
+            // Real-time snapshot listener automatically updates UI list
         }
     }
 }

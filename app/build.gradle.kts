@@ -1,7 +1,10 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,6 +22,24 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: "YOUR_GOOGLE_MAPS_API_KEY_TODO"
+        val razorpayKeyId = localProperties.getProperty("RAZORPAY_KEY_ID") ?: "rzp_test_YOUR_KEY_TODO"
+        val paymentMode = localProperties.getProperty("PAYMENT_MODE") ?: "mock"
+        val chatMode = localProperties.getProperty("CHAT_MODE") ?: "mock"
+        val notificationMode = localProperties.getProperty("NOTIFICATION_MODE") ?: "mock"
+
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("String", "RAZORPAY_KEY_ID", "\"$razorpayKeyId\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
+        buildConfigField("String", "PAYMENT_MODE", "\"$paymentMode\"")
+        buildConfigField("String", "CHAT_MODE", "\"$chatMode\"")
+        buildConfigField("String", "NOTIFICATION_MODE", "\"$notificationMode\"")
     }
 
     buildTypes {
@@ -39,6 +60,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -73,6 +95,19 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Google Maps & Location SDKs
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+
+    // Razorpay Payment Gateway SDK
+    implementation("com.razorpay:checkout:1.6.40")
+
+    // Firebase BoM, FCM (Push Notifications) & Firestore (Realtime Chat)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

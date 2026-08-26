@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.marketplace.onehour.common.placeholders.FirebaseChatPlaceholder
+import com.marketplace.onehour.integration.firebase.ChatMessage
 import com.marketplace.onehour.common.theme.SuccessGreen
 import java.text.SimpleDateFormat
 import java.util.*
@@ -194,7 +194,7 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(state.messages) { message ->
-                    val isUserMessage = message.senderId == "c1"
+                    val isUserMessage = message.senderId == "u101" || message.senderId == "c1"
                     ChatBubble(message = message, isUserMessage = isUserMessage)
                 }
             }
@@ -204,7 +204,7 @@ fun ChatScreen(
 
 @Composable
 private fun ChatBubble(
-    message: FirebaseChatPlaceholder.ChatMessage,
+    message: ChatMessage,
     isUserMessage: Boolean
 ) {
     val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }

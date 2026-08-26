@@ -4,6 +4,13 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+data class CategoryDto(
+    val id: String,
+    val name: String,
+    val description: String,
+    val iconName: String
+)
+
 data class HelperDto(
     val id: String,
     val name: String,
@@ -22,10 +29,15 @@ data class BookingDto(
     val id: String,
     val helperId: String,
     val helperName: String,
+    val customerId: String = "u101",
+    val customerName: String = "Priya Sharma",
     val serviceName: String,
-    val status: String, // Requested, Accepted, OnTheWay, InProgress, Completed
+    val status: String, // Requested, Accepted, OnTheWay, InProgress, Completed, Cancelled
+    val paymentStatus: String = "paid", // paid, pending, failed
     val scheduledTime: String,
-    val totalAmount: Double
+    val totalAmount: Double, // Amount in INR (₹)
+    val orderId: String? = null,
+    val paymentId: String? = null
 )
 
 /**

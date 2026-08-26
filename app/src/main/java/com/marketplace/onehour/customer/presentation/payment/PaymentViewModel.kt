@@ -28,18 +28,21 @@ class PaymentViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(selectedUpiApp = app)
     }
 
-    fun processPayment(onSuccess: (bookingId: String) -> Unit) {
+    fun processPayment(
+        activity: android.app.Activity? = null,
+        onSuccess: (bookingId: String) -> Unit
+    ) {
         _uiState.value = _uiState.value.copy(isProcessing = true)
 
         viewModelScope.launch {
-            delay(1500) // Simulate payment gateway processing time
-
-            // TODO: In production, invoke Razorpay Checkout activity here using RazorpayPlaceholder
+            // Initiate Razorpay Test Checkout via RazorpayPlaceholder / PaymentHelper
+            // TODO: In production, connect this to backend POST /api/payments/initiate endpoint first.
             RazorpayPlaceholder.initiatePayment(
-                amountInCents = (_uiState.value.totalAmount * 100).toLong(),
-                orderId = "order_${_uiState.value.bookingId}",
-                customerEmail = "customer@example.com",
-                customerPhone = "+919876543210",
+                activity = activity,
+                amountInInr = _uiState.value.totalAmount,
+                bookingId = _uiState.value.bookingId,
+                customerEmail = "customer@lumina.com",
+                customerPhone = "9876543210",
                 onSuccess = { paymentId ->
                     _uiState.value = _uiState.value.copy(
                         isProcessing = false,

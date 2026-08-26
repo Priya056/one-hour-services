@@ -17,5 +17,6 @@ val TextPrimaryLight = Color(0xFF0F172A)
 val TextSecondaryLight = Color(0xFF64748B)
 
 val StarYellow = Color(0xFFF59E0B)
+val WarningAmber = Color(0xFFF59E0B)
 val SuccessGreen = Color(0xFF10B981)
 val AlertRed = Color(0xFFEF4444)
