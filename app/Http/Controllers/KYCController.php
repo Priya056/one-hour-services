@@ -34,6 +34,20 @@ class KYCController extends Controller
     }
 
     /**
+     * Admin: List all KYC documents, optionally filtered by status.
+     */
+    public function adminIndex(Request $request)
+    {
+        $query = KYCDocument::with('helper.user')->orderBy('created_at', 'desc');
+
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        return KYCDocumentResource::collection($query->get());
+    }
+
+    /**
      * Get authenticated helper's KYC documents.
      */
     public function index(Request $request)
