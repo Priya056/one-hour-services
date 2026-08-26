@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.AppTopBar
@@ -36,6 +37,7 @@ fun BookingScreen(
     viewModel: BookingViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(helperId) {
         viewModel.loadHelper(helperId)
@@ -88,7 +90,7 @@ fun BookingScreen(
                             text = if (state.isLoading) "Booking..." else "Proceed to Payment",
                             onClick = {
                                 if (!state.isLoading) {
-                                    viewModel.confirmBooking(onSuccess = onProceedToPayment)
+                                    viewModel.confirmBooking(context = context, onSuccess = onProceedToPayment)
                                 }
                             },
                             modifier = Modifier.width(200.dp)
