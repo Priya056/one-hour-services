@@ -1,11 +1,12 @@
 package com.marketplace.onehour.customer.presentation.booking
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marketplace.onehour.common.location.LocationProvider
 import com.marketplace.onehour.common.network.ApiClient
 import com.marketplace.onehour.common.network.CreateBookingRequestBody
 import com.marketplace.onehour.common.network.HelperRepository
-import com.marketplace.onehour.common.network.LocationDefaults
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -75,7 +76,7 @@ class BookingViewModel : ViewModel() {
      * is computed from the Instant/Schedule selection (must satisfy the
      * backend's "after:now" validation).
      */
-    fun confirmBooking(onSuccess: (bookingId: String) -> Unit) {
+    fun confirmBooking(context: Context, onSuccess: (bookingId: String) -> Unit) {
         val helper = _uiState.value.helper
         val helperIdInt = helper?.id?.toIntOrNull()
         val categoryIdInt = helper?.categoryId?.toIntOrNull()
@@ -88,14 +89,15 @@ class BookingViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(isLoading = true, bookingError = null)
         viewModelScope.launch {
             try {
+                val device = LocationProvider.getCurrentLocation(context)
                 val response = ApiClient.api.createBooking(
                     CreateBookingRequestBody(
                         helperId = helperIdInt,
                         categoryId = categoryIdInt,
                         scheduledTime = computeScheduledTimeIso(),
                         durationHours = 1.0,
-                        locationLat = LocationDefaults.LAT,
-                        locationLng = LocationDefaults.LNG,
+                        locationLat = device.lat,
+                        locationLng = device.lng,
                         addressText = _uiState.value.selectedAddress
                     )
                 )

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.marketplace.onehour.common.network.ApiClient
 import com.marketplace.onehour.common.network.HelperDto
 import com.marketplace.onehour.common.network.HelperRepository
-import com.marketplace.onehour.common.network.LocationDefaults
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,11 +47,19 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    /** Called once the Composable resolves a real device location (or the fallback). */
+    fun setLocation(lat: Double, lng: Double, label: String) {
+        _uiState.value = _uiState.value.copy(userLat = lat, userLng = lng, userLocation = label)
+        viewModelScope.launch {
+            fetchNearbyHelpers(categoryId = _uiState.value.selectedCategory?.toIntOrNull())
+        }
+    }
+
     private suspend fun fetchNearbyHelpers(categoryId: Int? = null, maxDistanceKm: Double? = null) {
         try {
             val response = ApiClient.api.getNearbyHelpersRaw(
-                lat = LocationDefaults.LAT,
-                lng = LocationDefaults.LNG,
+                lat = _uiState.value.userLat,
+                lng = _uiState.value.userLng,
                 categoryId = categoryId,
                 maxDistanceKm = maxDistanceKm
             )
