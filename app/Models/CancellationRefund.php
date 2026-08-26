@@ -12,6 +12,8 @@ class CancellationRefund extends Model
 {
     use HasFactory;
 
+    protected $table = 'cancellations_refunds';
+
     protected $fillable = [
         'booking_id',
         'cancelled_by',

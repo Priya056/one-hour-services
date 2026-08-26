@@ -190,11 +190,10 @@ class BookingController extends Controller
         // Create cancellation refund record
         CancellationRefund::create([
             'booking_id' => $booking->id,
-            'cancelled_by' => $user->id,
-            'cancellation_reason' => 'Customer requested cancellation',
+            'cancelled_by' => 'customer',
+            'reason' => 'Customer requested cancellation',
             'refund_amount' => $payment->amount,
-            'refund_status' => 'initiated',
-            'refund_initiated_at' => now(),
+            'refund_status' => 'pending',
         ]);
 
         // Process actual Razorpay refund
@@ -204,7 +203,6 @@ class BookingController extends Controller
             // Update cancellation refund status to processed
             CancellationRefund::where('booking_id', $booking->id)->update([
                 'refund_status' => 'processed',
-                'refund_processed_at' => now(),
             ]);
         } catch (\Exception $e) {
             // Razorpay refund failed - update status to failed

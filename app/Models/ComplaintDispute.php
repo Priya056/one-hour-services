@@ -12,6 +12,8 @@ class ComplaintDispute extends Model
 {
     use HasFactory;
 
+    protected $table = 'complaints_disputes';
+
     protected $fillable = [
         'booking_id',
         'raised_by',

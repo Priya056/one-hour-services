@@ -12,9 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+        // Note: EnsureFrontendRequestsAreStateful is NOT prepended for mobile apps
+        // Mobile apps use bearer tokens (stateless) via Sanctum
+        // This middleware is only for SPA (Single Page Applications) using cookies
 
         $middleware->alias([
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
