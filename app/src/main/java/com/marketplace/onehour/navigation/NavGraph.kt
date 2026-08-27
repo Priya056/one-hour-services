@@ -64,7 +64,7 @@ fun NavGraph(navController: NavHostController) {
         composable(ScreenRoutes.CustomerHome.route) {
             HomeScreen(
                 onHelperClick = { helperId ->
-                    navController.navigate(ScreenRoutes.HelperProfile.createRoute(helperId.toString()))
+                    navController.navigate(ScreenRoutes.HelperProfile.createRoute(helperId))
                 },
                 onOpenFilterSheet = {
                     navController.navigate(ScreenRoutes.CustomerFilter.route)
@@ -96,18 +96,18 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(ScreenRoutes.BookingFlow.route) { backStack ->
-            val helperId = backStack.arguments?.getString("helperId")?.toIntOrNull() ?: 1
+            val helperId = backStack.arguments?.getString("helperId") ?: "h1"
             BookingScreen(
                 helperId = helperId,
                 onBackClick = { navController.popBackStack() },
                 onProceedToPayment = { bookingId ->
-                    navController.navigate(ScreenRoutes.Payment.createRoute(bookingId.toString()))
+                    navController.navigate(ScreenRoutes.Payment.createRoute(bookingId))
                 }
             )
         }
 
         composable(ScreenRoutes.Payment.route) { backStack ->
-            val bookingId = backStack.arguments?.getString("bookingId") ?: "1"
+            val bookingId = backStack.arguments?.getString("bookingId") ?: "b101"
             PaymentScreen(
                 bookingId = bookingId,
                 onBackClick = { navController.popBackStack() },
@@ -209,6 +209,11 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() },
                 onGetStartedClick = {
                     navController.navigate(ScreenRoutes.HelperProfileCreation.route)
+                },
+                onAlreadyHelper = {
+                    navController.navigate(ScreenRoutes.HelperHome.route) {
+                        popUpTo(ScreenRoutes.CustomerHome.route)
+                    }
                 }
             )
         }
@@ -296,6 +301,7 @@ fun NavGraph(navController: NavHostController) {
         composable(ScreenRoutes.HelperSettings.route) {
             HelperSettingsSupportScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToJobHistory = { navController.navigate(ScreenRoutes.EarningsDashboard.route) },
                 onLogout = {
                     navController.navigate(ScreenRoutes.CustomerHome.route) {
                         popUpTo(ScreenRoutes.HelperHome.route) { inclusive = true }

@@ -1,7 +1,11 @@
 package com.marketplace.onehour.customer.presentation.settings
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,17 +18,29 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.marketplace.onehour.BuildConfig
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.CustomerBottomNavBar
+import com.marketplace.onehour.common.components.InitialsAvatar
+import com.marketplace.onehour.common.components.categoryPhotoUrl
 import com.marketplace.onehour.common.theme.SuccessGreen
+import com.marketplace.onehour.common.theme.Terracotta
+import com.marketplace.onehour.common.theme.TerracottaLight
+import com.marketplace.onehour.common.update.AppUpdateChecker
 
 @Composable
 fun CustomerSettingsScreen(
@@ -67,14 +83,21 @@ fun CustomerSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box {
-                        AsyncImage(
-                            model = state.avatarUrl,
-                            contentDescription = state.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                        )
+                        if (!state.avatarUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(state.avatarUrl)
+                                    .crossfade(250)
+                                    .build(),
+                                contentDescription = state.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            InitialsAvatar(name = state.name, size = 64.dp, shape = CircleShape)
+                        }
                         IconButton(
                             onClick = { /* Edit Avatar */ },
                             modifier = Modifier
@@ -94,41 +117,87 @@ fun CustomerSettingsScreen(
                 }
             }
 
-            // Switch to Helper Mode Card Banner
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSwitchToHelperMode() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            // Switch to Helper Mode Card Banner — brand terracotta ("act now"
+            // urgency color, same semantic as CTAs elsewhere) over a real
+            // photo backdrop, not the old default-slate/cyan combo.
+            run {
+                val haptics = LocalHapticFeedback.current
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val pressScale by animateFloatAsState(
+                    targetValue = if (isPressed) 0.97f else 1f,
+                    animationSpec = tween(120),
+                    label = "become_helper_press"
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scale(pressScale)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onSwitchToHelperMode()
+                        },
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Box {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(categoryPhotoUrl("become-a-helper"))
+                                .crossfade(300)
+                                .build(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(Terracotta)
+                        )
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF38BDF8).copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
+                                .matchParentSize()
+                                .background(
+                                    Brush.horizontalGradient(
+                                        0f to Terracotta.copy(alpha = 0.94f),
+                                        0.7f to Terracotta.copy(alpha = 0.8f),
+                                        1f to Terracotta.copy(alpha = 0.55f)
+                                    )
+                                )
+                        )
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.WorkOutline, contentDescription = null, tint = Color(0xFF38BDF8))
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.22f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.WorkOutline, contentDescription = null, tint = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(text = "Become a 1-Hour Helper", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                    Text(text = "Earn money by helping neighbors near you", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp)
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSwitchToHelperMode()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(text = "Switch", color = Terracotta, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(text = "Become a 1-Hour Helper", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Text(text = "Earn money by helping neighbors near you", color = Color.Gray, fontSize = 11.sp)
-                        }
-                    }
-                    Button(
-                        onClick = onSwitchToHelperMode,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(text = "Switch", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -223,6 +292,63 @@ fun CustomerSettingsScreen(
                     SettingsRowItem(icon = Icons.Default.HelpOutline, title = "Help & Support", subtitle = "FAQs, Live Chat & Contact Us", onClick = {})
                     Divider(color = Color.Gray.copy(alpha = 0.1f))
                     SettingsRowItem(icon = Icons.Default.Description, title = "Terms & Privacy Policy", subtitle = "Legal terms & privacy rights", onClick = {})
+                }
+            }
+
+            // Check for Update — debug builds only, never shows in a real
+            // client release. See common.update.AppUpdateChecker.
+            if (BuildConfig.DEBUG) {
+                var updateStatus by remember { mutableStateOf<String?>(null) }
+                var isCheckingUpdate by remember { mutableStateOf(false) }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !isCheckingUpdate) {
+                                    isCheckingUpdate = true
+                                    updateStatus = null
+                                    AppUpdateChecker.checkForUpdate(
+                                        onNoUpdateAvailable = {
+                                            isCheckingUpdate = false
+                                            updateStatus = "You're on the latest build."
+                                        },
+                                        onError = { message ->
+                                            isCheckingUpdate = false
+                                            updateStatus = message
+                                        }
+                                    )
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(text = "Check for Update", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text(text = "Dev build v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", fontSize = 11.sp, color = Color.Gray)
+                                }
+                            }
+                            if (isCheckingUpdate) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+                            }
+                        }
+                        if (updateStatus != null) {
+                            Text(
+                                text = updateStatus!!,
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
                 }
             }
 

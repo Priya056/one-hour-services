@@ -14,29 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class HistoryJobItem(
-    val bookingId: String,
-    val customerName: String,
-    val category: String,
-    val date: String,
-    val amount: String,
-    val status: String // COMPLETED, CANCELLED
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelperJobHistoryScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: HelperJobHistoryViewModel = viewModel()
 ) {
-    val historyList = remember {
-        listOf(
-            HistoryJobItem("BK-8842", "Priya Sharma", "Electrical Repair", "25 Aug 2026, 3:00 PM", "₹499.00", "COMPLETED"),
-            HistoryJobItem("BK-8835", "Rahul Verma", "Switchboard Install", "24 Aug 2026, 5:30 PM", "₹599.00", "COMPLETED"),
-            HistoryJobItem("BK-8820", "Ananya Roy", "Wiring Troubleshooting", "23 Aug 2026, 11:00 AM", "₹499.00", "CANCELLED"),
-            HistoryJobItem("BK-8812", "Amit Patel", "Light Fixture Repair", "22 Aug 2026, 4:00 PM", "₹799.00", "COMPLETED")
-        )
-    }
+    val state by viewModel.state.collectAsState()
+    val historyList = state.jobs
 
     Scaffold(
         topBar = {
@@ -50,6 +37,15 @@ fun HelperJobHistoryScreen(
             )
         }
     ) { padding ->
+        if (!state.isLoading && historyList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No completed or cancelled jobs yet", color = Color.Gray)
+            }
+            return@Scaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

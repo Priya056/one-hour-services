@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.PrimaryButton
 import com.marketplace.onehour.common.theme.SuccessGreen
+import com.marketplace.onehour.common.theme.Terracotta
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -53,9 +54,22 @@ fun HourlyRateScheduleScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    val registrationError = state.registrationError
+                    if (registrationError != null) {
+                        Text(
+                            text = registrationError,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
                     PrimaryButton(
-                        text = "Complete Registration & Go Live 🎉",
-                        onClick = onCompleteRegistration
+                        text = if (state.isLoading) "Submitting..." else "Complete Registration & Go Live 🎉",
+                        onClick = {
+                            if (!state.isLoading) {
+                                viewModel.completeRegistration(onSuccess = onCompleteRegistration)
+                            }
+                        }
                     )
                 }
             }
@@ -147,7 +161,7 @@ fun HourlyRateScheduleScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+                colors = CardDefaults.cardColors(containerColor = Terracotta)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -156,12 +170,12 @@ fun HourlyRateScheduleScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = "Enable Instant 15-Min Jobs", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text(text = "Auto-match with nearby customers who need urgent 1-hour service", color = Color.LightGray, fontSize = 11.sp)
+                        Text(text = "Auto-match with nearby customers who need urgent 1-hour service", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
                     }
                     Switch(
                         checked = state.instantBookingEnabled,
                         onCheckedChange = { viewModel.toggleInstantBooking(it) },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = Color(0xFF38BDF8))
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color.White.copy(alpha = 0.4f))
                     )
                 }
             }

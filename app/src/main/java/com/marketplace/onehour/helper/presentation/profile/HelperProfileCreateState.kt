@@ -1,8 +1,12 @@
 package com.marketplace.onehour.helper.presentation.profile
 
+import com.marketplace.onehour.common.network.CategoryDto
+
 data class HelperProfileCreateState(
     val photoUri: String? = null,
-    val selectedCategory: String = "Electrical Specialist",
+    val categories: List<CategoryDto> = emptyList(),
+    val selectedCategoryId: Int? = null,
+    val selectedCategoryName: String = "",
     val availableSkills: List<String> = listOf(
         "Circuit Breaker Repair",
         "Outlet & Switch Wiring",
@@ -11,8 +15,8 @@ data class HelperProfileCreateState(
         "Emergency Troubleshooting",
         "Fan & Fixture Mounting"
     ),
-    val selectedSkills: Set<String> = setOf("Circuit Breaker Repair", "Outlet & Switch Wiring"),
-    val experienceYears: String = "4 Years",
-    val bioText: String = "Licensed electrician with 4 years experience in residential and commercial wiring. Focused on prompt, reliable 1-hour service.",
+    val selectedSkills: Set<String> = emptySet(),
+    val experienceYears: String = "",
+    val bioText: String = "",
     val isLoading: Boolean = false
 )

@@ -22,20 +22,23 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.marketplace.onehour.common.components.AppTopBar
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingScreen(
-    helperId: Int,
+    helperId: String,
     onBackClick: () -> Unit,
-    onProceedToPayment: (bookingId: Int) -> Unit,
+    onProceedToPayment: (bookingId: String) -> Unit,
     viewModel: BookingViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(helperId) {
         viewModel.loadHelper(helperId)
@@ -54,40 +57,46 @@ fun BookingScreen(
                 shadowElevation = 8.dp,
                 color = MaterialTheme.colorScheme.surface
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    val bookingError = state.bookingError
+                    if (bookingError != null) {
                         Text(
-                            text = "TOTAL AMOUNT",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = "$${"%.2f".format(state.totalAmount)}",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            text = bookingError,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "TOTAL AMOUNT",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "$${"%.2f".format(state.totalAmount)}",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
 
-                    PrimaryButton(
-                        text = if (state.isCreatingBooking) "Creating Booking..." else "Proceed to Payment",
-                        onClick = { 
-                            if (!state.isCreatingBooking) {
-                                viewModel.createBooking { bookingId ->
-                                    onProceedToPayment(bookingId)
+                        PrimaryButton(
+                            text = if (state.isLoading) "Booking..." else "Proceed to Payment",
+                            onClick = {
+                                if (!state.isLoading) {
+                                    viewModel.confirmBooking(context = context, onSuccess = onProceedToPayment)
                                 }
-                            }
-                        },
-                        enabled = !state.isCreatingBooking,
-                        modifier = Modifier.width(200.dp)
-                    )
+                            },
+                            modifier = Modifier.width(200.dp)
+                        )
+                    }
                 }
             }
         }
@@ -119,14 +128,18 @@ fun BookingScreen(
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = helper.photoUrl,
-                            contentDescription = helper.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
+                        if (helper.photoUrl.isNotBlank()) {
+                            AsyncImage(
+                                model = helper.photoUrl,
+                                contentDescription = helper.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        } else {
+                            InitialsAvatar(name = helper.name, size = 56.dp, shape = RoundedCornerShape(12.dp))
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(text = helper.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)

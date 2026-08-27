@@ -2,6 +2,7 @@ package com.marketplace.onehour.customer.presentation.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marketplace.onehour.common.network.ApiClient
 import com.marketplace.onehour.common.placeholders.RazorpayPlaceholder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +14,21 @@ class PaymentViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PaymentState())
     val uiState: StateFlow<PaymentState> = _uiState.asStateFlow()
 
-    fun setBookingDetails(bookingId: String, amount: Double = 40.0) {
-        _uiState.value = _uiState.value.copy(
-            bookingId = bookingId,
-            totalAmount = amount
-        )
+    /**
+     * Fetches the real booking to get its actual total_amount — this used to
+     * default to a hardcoded $40 regardless of the helper's real rate.
+     */
+    fun setBookingDetails(bookingId: String) {
+        _uiState.value = _uiState.value.copy(bookingId = bookingId)
+        val bookingIdInt = bookingId.toIntOrNull() ?: return
+        viewModelScope.launch {
+            try {
+                val booking = ApiClient.api.getBooking(bookingIdInt).data
+                _uiState.value = _uiState.value.copy(totalAmount = booking.totalAmount)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Couldn't load booking amount: ${e.message}")
+            }
+        }
     }
 
     fun selectPaymentMethod(method: PaymentMethodType) {

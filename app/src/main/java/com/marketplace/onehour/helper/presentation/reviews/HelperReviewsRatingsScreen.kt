@@ -14,28 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class CustomerReviewItem(
-    val id: String,
-    val customerName: String,
-    val rating: Int,
-    val comment: String,
-    val date: String
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelperReviewsRatingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: HelperReviewsViewModel = viewModel()
 ) {
-    val reviewsList = remember {
-        listOf(
-            CustomerReviewItem("REV-1", "Priya Sharma", 5, "Fixed the circuit breaker in 30 mins! Very polite and professional.", "25 Aug 2026"),
-            CustomerReviewItem("REV-2", "Rahul Verma", 5, "Punctual helper. Solved the switchboard issue quickly.", "24 Aug 2026"),
-            CustomerReviewItem("REV-3", "Amit Patel", 4, "Good service, arrived on time. Highly recommended.", "22 Aug 2026"),
-            CustomerReviewItem("REV-4", "Suresh Kumar", 5, "Great experience! Will definitely book again.", "20 Aug 2026")
-        )
-    }
+    val state by viewModel.state.collectAsState()
+    val reviewsList = state.reviews
 
     Scaffold(
         topBar = {
@@ -72,17 +60,12 @@ fun HelperReviewsRatingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "4.9 ★",
+                                text = "${"%.1f".format(state.averageRating)} ★",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 36.sp,
                                 color = Color(0xFFFFB300)
                             )
-                            Text(text = "Based on 124 customer reviews", fontSize = 12.sp)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(text = "Punctuality: 99%", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text(text = "Skill Rating: 4.9/5", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text(text = "Politeness: 5.0/5", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(text = "Based on ${state.totalReviews} customer reviews", fontSize = 12.sp)
                         }
                     }
                 }

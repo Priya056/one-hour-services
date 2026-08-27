@@ -1,9 +1,10 @@
 package com.marketplace.onehour.customer.presentation.profile
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.RowScope
-
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -15,14 +16,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.marketplace.onehour.common.components.AppTopBar
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 import com.marketplace.onehour.common.components.StarRatingBar
 import com.marketplace.onehour.common.theme.StarYellow
@@ -86,9 +93,13 @@ fun HelperProfileScreen(
                             )
                         }
 
+                        val haptics = LocalHapticFeedback.current
                         PrimaryButton(
                             text = "Book Now",
-                            onClick = { onBookNowClick(state.helper!!.id) },
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onBookNowClick(state.helper!!.id)
+                            },
                             modifier = Modifier.width(180.dp)
                         )
                     }
@@ -118,20 +129,40 @@ fun HelperProfileScreen(
                 // Header Profile Info
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    var appeared by remember { mutableStateOf(false) }
+                    LaunchedEffect(helper.id) { appeared = true }
+                    val entranceScale by animateFloatAsState(
+                        targetValue = if (appeared) 1f else 0.8f,
+                        animationSpec = tween(400, easing = FastOutSlowInEasing),
+                        label = "profile_avatar_entrance"
+                    )
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Box {
-                            AsyncImage(
-                                model = helper.photoUrl,
-                                contentDescription = helper.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(110.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.Gray.copy(alpha = 0.2f))
-                            )
+                        Box(modifier = Modifier.scale(entranceScale)) {
+                            if (helper.photoUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(helper.photoUrl)
+                                        .crossfade(300)
+                                        .build(),
+                                    contentDescription = helper.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(110.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Gray.copy(alpha = 0.2f))
+                                )
+                            } else {
+                                InitialsAvatar(
+                                    name = helper.name,
+                                    size = 110.dp,
+                                    shape = CircleShape
+                                )
+                            }
 
                             if (helper.isAvailable) {
                                 Surface(
@@ -337,18 +368,26 @@ private fun ReviewCard(review: ReviewItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = review.reviewerName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    InitialsAvatar(
+                        name = review.reviewerName,
+                        size = 28.dp,
+                        shape = CircleShape
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = review.reviewerName,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
                 Text(
                     text = review.date,
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             StarRatingBar(rating = review.rating, starSize = 16)
             Spacer(modifier = Modifier.height(8.dp))
             Text(

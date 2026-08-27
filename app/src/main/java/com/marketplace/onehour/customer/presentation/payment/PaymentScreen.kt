@@ -13,12 +13,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marketplace.onehour.common.components.AppTopBar
 import com.marketplace.onehour.common.components.PrimaryButton
+import com.marketplace.onehour.common.theme.WarningAmber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +51,13 @@ fun PaymentScreen(
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    val haptics = LocalHapticFeedback.current
                     PrimaryButton(
                         text = if (state.isProcessing) "Processing Payment..." else "Pay $${"%.2f".format(state.totalAmount)} & Confirm",
-                        onClick = { viewModel.processPayment(onPaymentSuccess) },
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            viewModel.processPayment(onPaymentSuccess)
+                        },
                         enabled = !state.isProcessing
                     )
                 }
@@ -106,27 +113,29 @@ fun PaymentScreen(
                 }
             }
 
-            // TODO Integration Banner for Razorpay SDK
+            // Real payments aren't wired up yet (scoped separately, same
+            // bucket as Maps/real-time chat) — tell testers honestly rather
+            // than silently pretending a real charge happened.
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+                colors = CardDefaults.cardColors(containerColor = WarningAmber.copy(alpha = 0.14f))
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Code, contentDescription = null, tint = Color(0xFF38BDF8))
+                        Icon(Icons.Default.Info, contentDescription = null, tint = WarningAmber)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "TODO: Razorpay Payment Gateway Integration",
-                            color = Color(0xFF38BDF8),
+                            text = "Test Mode",
+                            color = WarningAmber,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Mock Gateway Active • Connect Razorpay SDK (`com.razorpay:checkout`) here for live transactions.",
-                        color = Color.Gray,
+                        text = "No real payment will be charged in this build — this confirms your booking without processing money.",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         fontSize = 11.sp,
                         lineHeight = 16.sp
                     )

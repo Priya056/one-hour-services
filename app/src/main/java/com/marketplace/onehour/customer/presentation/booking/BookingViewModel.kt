@@ -1,9 +1,12 @@
 package com.marketplace.onehour.customer.presentation.booking
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marketplace.onehour.common.location.LocationProvider
 import com.marketplace.onehour.common.network.ApiClient
-import com.marketplace.onehour.common.network.CreateBookingRequest
+import com.marketplace.onehour.common.network.CreateBookingRequestBody
+import com.marketplace.onehour.common.network.HelperRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,35 +14,39 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+// The 3 fixed "Schedule Later" slot chips shown in BookingScreen — mapped to a
+// 24h start hour so a real scheduled_time can be built for the API.
+private val SCHEDULED_SLOT_START_HOUR = mapOf(
+    "02:00 - 03:00 PM" to 14,
+    "04:00 - 05:00 PM" to 16,
+    "06:00 - 07:00 PM" to 18
+)
+
 class BookingViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(BookingState())
     val uiState: StateFlow<BookingState> = _uiState.asStateFlow()
 
-    fun loadHelper(helperId: Int) {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+    fun loadHelper(helperId: String) {
         viewModelScope.launch {
-            try {
-                val helper = ApiClient.apiService.getHelperProfile(helperId)
-                
-                val baseFee = helper.hourly_rate ?: 35.0
-                val serviceFee = baseFee * 0.10
-                val taxes = (baseFee + serviceFee) * 0.05
-                val total = baseFee + serviceFee + taxes
+            val foundHelper = HelperRepository.findById(helperId) ?: HelperRepository.all().firstOrNull()
 
-                _uiState.value = _uiState.value.copy(
-                    helper = helper,
-                    baseHourlyFee = baseFee,
-                    platformFee = serviceFee,
-                    taxAmount = taxes,
-                    totalAmount = total,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Failed to load helper: ${e.message}"
-                )
+            if (foundHelper == null) {
+                _uiState.value = _uiState.value.copy(bookingError = "Helper not found — go back and search again.")
+                return@launch
             }
+
+            val baseFee = foundHelper.hourlyRate
+            val serviceFee = baseFee * 0.10
+            val taxes = (baseFee + serviceFee) * 0.05
+            val total = baseFee + serviceFee + taxes
+
+            _uiState.value = _uiState.value.copy(
+                helper = foundHelper,
+                baseHourlyFee = baseFee,
+                platformFee = serviceFee,
+                taxAmount = taxes,
+                totalAmount = total
+            )
         }
     }
 
@@ -63,65 +70,58 @@ class BookingViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(specialInstructions = instructions)
     }
 
-    fun createBooking(
-        onSuccess: (bookingId: Int) -> Unit
-    ) {
+    /**
+     * Creates the real booking via POST /bookings. helper_id/category_id come
+     * from the helper the user actually tapped through from Home; scheduled_time
+     * is computed from the Instant/Schedule selection (must satisfy the
+     * backend's "after:now" validation).
+     */
+    fun confirmBooking(context: Context, onSuccess: (bookingId: String) -> Unit) {
         val helper = _uiState.value.helper
-        if (helper == null) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Helper not loaded")
+        val helperIdInt = helper?.id?.toIntOrNull()
+        val categoryIdInt = helper?.categoryId?.toIntOrNull()
+
+        if (helper == null || helperIdInt == null || categoryIdInt == null) {
+            _uiState.value = _uiState.value.copy(bookingError = "Missing helper details — go back and reselect.")
             return
         }
 
-        _uiState.value = _uiState.value.copy(isCreatingBooking = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(isLoading = true, bookingError = null)
         viewModelScope.launch {
             try {
-                // Parse scheduled time from UI state
-                val scheduledTime = parseScheduledTime(
-                    _uiState.value.selectedDate,
-                    _uiState.value.selectedTimeSlot,
-                    _uiState.value.isInstantBooking
+                val device = LocationProvider.getCurrentLocation(context)
+                val response = ApiClient.api.createBooking(
+                    CreateBookingRequestBody(
+                        helperId = helperIdInt,
+                        categoryId = categoryIdInt,
+                        scheduledTime = computeScheduledTimeIso(),
+                        durationHours = 1.0,
+                        locationLat = device.lat,
+                        locationLng = device.lng,
+                        addressText = _uiState.value.selectedAddress
+                    )
                 )
-
-                val request = CreateBookingRequest(
-                    helper_id = helper.id,
-                    category_id = helper.category?.id ?: 1,
-                    scheduled_time = scheduledTime,
-                    duration_hours = 1.0, // Default 1 hour
-                    location_lat = 12.9716, // TODO: Use actual user location
-                    location_lng = 77.5946,
-                    address_text = _uiState.value.selectedAddress
-                )
-
-                val booking = ApiClient.apiService.createBooking(request)
-                
-                _uiState.value = _uiState.value.copy(
-                    isCreatingBooking = false,
-                    createdBookingId = booking.id
-                )
-                
-                onSuccess(booking.id)
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                onSuccess(response.data.id.toString())
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isCreatingBooking = false,
-                    errorMessage = "Failed to create booking: ${e.message}"
+                    isLoading = false,
+                    bookingError = "Couldn't create booking: ${e.message}"
                 )
             }
         }
     }
 
-    private fun parseScheduledTime(date: String, timeSlot: String, isInstant: Boolean): String {
-        return if (isInstant) {
-            // For instant booking, schedule 15 minutes from now
-            val now = LocalDateTime.now().plusMinutes(15)
-            now.format(DateTimeFormatter.ISO_DATE_TIME)
+    private fun computeScheduledTimeIso(): String {
+        val now = LocalDateTime.now()
+        val target = if (_uiState.value.isInstantBooking) {
+            // Comfortably clears the backend's "after:now" check for an
+            // "arrive in ~15 min" instant booking.
+            now.plusMinutes(20)
         } else {
-            // Parse the date and time slot
-            // Format: "Today, Aug 24" + "02:00 PM - 03:00 PM"
-            // Simplified parsing for demo
-            val now = LocalDateTime.now()
-            val hour = timeSlot.substringBefore(":").toIntOrNull() ?: 14
-            val time = now.withHour(hour).withMinute(0).withSecond(0)
-            time.format(DateTimeFormatter.ISO_DATE_TIME)
+            val hour = SCHEDULED_SLOT_START_HOUR[_uiState.value.selectedTimeSlot] ?: 14
+            now.plusDays(1).withHour(hour).withMinute(0).withSecond(0).withNano(0)
         }
+        return target.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
     }
 }

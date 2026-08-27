@@ -1,71 +1,84 @@
 package com.marketplace.onehour.common.network
 
-import okhttp3.Interceptor
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
+/**
+ * Backend serves unversioned /api/... routes with snake_case JSON (standard
+ * Laravel Resource output) — LOWER_CASE_WITH_UNDERSCORES maps that onto our
+ * camelCase Kotlin fields without renaming every property.
+ */
 object ApiClient {
-    // TODO: Configure this with the actual deployed backend URL
-    // For development/testing, this should point to the deployed Laravel instance
-    // Do NOT use localhost for physical device testing
-    private const val BASE_URL = "https://your-deployed-backend-url.com/"
-    
-    private var authToken: String? = null
-    
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-    
-    private val authInterceptor = Interceptor { chain ->
-        val originalRequest = chain.request()
-        val requestBuilder = originalRequest.newBuilder()
-        
-        authToken?.let {
-            requestBuilder.addHeader("Authorization", "Bearer $it")
+    private const val BASE_URL = "https://one-hour-services-backend-staging.onrender.com/"
+
+    private val gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create()
+
+    private val authInterceptor = okhttp3.Interceptor { chain ->
+        val original = chain.request()
+        val token = TokenStore.getToken()
+        val request = if (!token.isNullOrBlank()) {
+            original.newBuilder().addHeader("Authorization", "Bearer $token").build()
+        } else {
+            original
         }
-        
-        val request = requestBuilder.build()
         chain.proceed(request)
     }
-    
+
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BASIC
+    }
+
+    // The emulator's TLS stack intermittently mis-detects a genuine HTTPS
+    // response as cleartext HTTP (java.net.UnknownServiceException:
+    // CLEARTEXT communication ... not permitted), even on a request that
+    // never left port 443. Retrying on the *same* pooled connection
+    // reproduces it again immediately, so force a brand new connection by
+    // evicting the pool before each retry. Scoped to just this exception
+    // (not all IOExceptions) so a genuine slow-server timeout on a
+    // non-idempotent POST never gets silently retried.
+    private val connectionPool = okhttp3.ConnectionPool()
+
+    private val retryInterceptor = okhttp3.Interceptor { chain ->
+        val request = chain.request()
+        var attempt = 0
+        var response: okhttp3.Response? = null
+        while (response == null) {
+            try {
+                response = chain.proceed(request)
+            } catch (e: java.net.UnknownServiceException) {
+                attempt++
+                connectionPool.evictAll()
+                if (attempt >= 3) throw e
+            }
+        }
+        response
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+        .connectionPool(connectionPool)
         .addInterceptor(authInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(retryInterceptor)
+        .addInterceptor(loggingInterceptor)
+        // Render's free tier spins down after inactivity and can take 50s+
+        // to cold-start — OkHttp's 10s default timeout fails that every time.
+        .connectTimeout(90, TimeUnit.SECONDS)
+        .readTimeout(90, TimeUnit.SECONDS)
+        .writeTimeout(90, TimeUnit.SECONDS)
         .build()
-    
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-    
-    val apiService: ApiService = retrofit.create(ApiService::class.java)
-    
-    /**
-     * Set the authentication token for API requests
-     */
-    fun setAuthToken(token: String) {
-        authToken = token
-    }
-    
-    /**
-     * Clear the authentication token (e.g., on logout)
-     */
-    fun clearAuthToken() {
-        authToken = null
-    }
-    
-    /**
-     * Update the base URL (useful for environment switching)
-     */
-    fun updateBaseUrl(newBaseUrl: String) {
-        // Note: This would require recreating the Retrofit instance
-        // For simplicity, this is a placeholder for future implementation
+
+    val api: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+            .create(ApiService::class.java)
     }
 }

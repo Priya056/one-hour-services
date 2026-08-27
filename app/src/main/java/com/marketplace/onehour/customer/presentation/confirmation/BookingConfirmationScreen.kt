@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.marketplace.onehour.common.components.InitialsAvatar
 import com.marketplace.onehour.common.components.PrimaryButton
 import com.marketplace.onehour.common.theme.SuccessGreen
 
@@ -127,14 +128,18 @@ fun BookingConfirmationScreen(
                         Text(text = "Assigned Helper", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                         Spacer(modifier = Modifier.height(10.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            AsyncImage(
-                                model = helper.photoUrl,
-                                contentDescription = helper.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(54.dp)
-                                    .clip(CircleShape)
-                            )
+                            if (helper.photoUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = helper.photoUrl,
+                                    contentDescription = helper.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(CircleShape)
+                                )
+                            } else {
+                                InitialsAvatar(name = helper.name, size = 54.dp, shape = CircleShape)
+                            }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = helper.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)

@@ -40,11 +40,6 @@ fun HelperDashboardHomeScreen(
                             text = "Hello, ${state.helperName}",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
-                        Text(
-                            text = state.serviceCategory,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 },
                 actions = {

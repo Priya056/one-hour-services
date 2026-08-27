@@ -32,19 +32,6 @@ fun HelperProfileCreationScreen(
     val state by viewModel.uiState.collectAsState()
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
 
-    val categoryOptions = remember {
-        listOf(
-            "Electrical Specialist",
-            "Plumbing Specialist",
-            "Home Repairs & Mounting",
-            "Personal Tutor",
-            "Grocery & Errands",
-            "Event Photography",
-            "Personal Assistant",
-            "Graphic & Web Design"
-        )
-    }
-
     Scaffold(
         topBar = {
             AppTopBar(
@@ -142,7 +129,7 @@ fun HelperProfileCreationScreen(
                     onExpandedChange = { categoryDropdownExpanded = !categoryDropdownExpanded }
                 ) {
                     OutlinedTextField(
-                        value = state.selectedCategory,
+                        value = state.selectedCategoryName,
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded) },
@@ -155,11 +142,11 @@ fun HelperProfileCreationScreen(
                         expanded = categoryDropdownExpanded,
                         onDismissRequest = { categoryDropdownExpanded = false }
                     ) {
-                        categoryOptions.forEach { cat ->
+                        state.categories.forEach { cat ->
                             DropdownMenuItem(
-                                text = { Text(cat) },
+                                text = { Text(cat.name) },
                                 onClick = {
-                                    viewModel.onCategorySelected(cat)
+                                    viewModel.onCategorySelected(cat.id, cat.name)
                                     categoryDropdownExpanded = false
                                 }
                             )

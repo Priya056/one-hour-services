@@ -1,5 +1,6 @@
 package com.marketplace.onehour.customer.presentation.auth
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,6 +32,7 @@ fun LoginRegisterScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val activity = LocalContext.current as Activity
 
     Column(
         modifier = Modifier
@@ -118,7 +121,7 @@ fun LoginRegisterScreen(
 
                         PrimaryButton(
                             text = if (state.isLoading) "Sending OTP..." else "Send Verification Code",
-                            onClick = { viewModel.sendOtp() },
+                            onClick = { viewModel.sendOtp(activity, onLoginSuccess) },
                             enabled = !state.isLoading && state.phoneNumber.length == 10
                         )
                     }
@@ -138,8 +141,6 @@ fun LoginRegisterScreen(
                             shape = RoundedCornerShape(14.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
                         if (state.errorMessage != null) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -149,18 +150,18 @@ fun LoginRegisterScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
 
                         PrimaryButton(
                             text = if (state.isLoading) "Verifying..." else "Verify & Continue",
-                            onClick = { viewModel.verifyOtp(onLoginSuccess) },
-                            enabled = !state.isLoading && state.otpCode.length >= 4
+                            onClick = { viewModel.verifyOtp() },
+                            enabled = !state.isLoading && state.otpCode.length == 6
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         TextButton(
-                            onClick = { viewModel.resendOtp() },
+                            onClick = { viewModel.resendOtp(activity) },
                             enabled = state.resendCountdownSeconds == 0,
                             modifier = Modifier.fillMaxWidth()
                         ) {
