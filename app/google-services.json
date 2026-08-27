@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1234567890",
+    "project_id": "one-hour-marketplace",
+    "storage_bucket": "one-hour-marketplace.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1234567890:android:abcdef",
+        "android_client_info": {
+          "package_name": "com.marketplace.onehour"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummyKeyForLocalDevelopment"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

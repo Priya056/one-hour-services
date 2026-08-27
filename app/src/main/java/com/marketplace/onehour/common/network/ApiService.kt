@@ -14,7 +14,7 @@ data class HelperDto(
     val name: String,
     val photoUrl: String,
     val mainCategory: String,
-    val categoryId: String,
+    val categoryId: String = "cat_1",
     val rating: Double,
     val reviewCount: Int,
     val hourlyRate: Double,
@@ -57,10 +57,11 @@ data class AuthResponse(
 )
 
 data class CategoryDto(
-    val id: Int,
+    val id: String,
     val name: String,
-    val iconUrl: String?,
-    val description: String?
+    val description: String? = null,
+    val iconName: String? = null,
+    val iconUrl: String? = null
 )
 
 data class NearbyHelperDto(
