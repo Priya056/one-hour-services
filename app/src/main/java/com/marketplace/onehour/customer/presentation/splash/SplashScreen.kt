@@ -1,12 +1,9 @@
 package com.marketplace.onehour.customer.presentation.splash
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,10 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.marketplace.onehour.R
 import com.marketplace.onehour.common.theme.BarlowCondensed
 import com.marketplace.onehour.common.theme.TealDeep
 import com.marketplace.onehour.common.theme.Terracotta
@@ -31,10 +30,10 @@ fun SplashScreen(
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val scale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.08f,
+        initialValue = 0.96f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearOutSlowInEasing),
+            animation = tween(1200, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale"
@@ -62,33 +61,26 @@ fun SplashScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
         ) {
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.ic_splash_logo),
+                contentDescription = "OneHour Logo Mark",
                 modifier = Modifier
-                    .size(110.dp)
+                    .size(130.dp)
                     .scale(scale)
-                    .background(Color.White.copy(alpha = 0.15f), CircleShape)
-                    .padding(20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.HourglassTop,
-                    contentDescription = "App Logo",
-                    tint = Color.White,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "1-HOUR",
+                text = "OneHour",
                 fontFamily = BarlowCondensed,
-                fontSize = 40.sp,
+                fontSize = 42.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White,
-                letterSpacing = 4.sp
+                letterSpacing = 2.sp
             )
 
             Text(
@@ -99,12 +91,14 @@ fun SplashScreen(
                 letterSpacing = 1.sp
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Verified Helpers • Exactly 60 Mins",
+                text = "LOCAL HELP, JUST 1 HOUR AWAY.",
                 fontSize = 12.sp,
-                color = Color.White.copy(alpha = 0.6f)
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4ADE80),
+                letterSpacing = 1.2.sp
             )
         }
     }
